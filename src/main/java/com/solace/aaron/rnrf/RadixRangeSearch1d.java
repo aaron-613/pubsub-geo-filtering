@@ -513,7 +513,7 @@ public class RadixRangeSearch1d {
          */
         private double getActualLengthRecursive(DepthOfCalc depth) {
             if ((depth == DepthOfCalc.ACTUAL && !hasSplit) || (depth == DepthOfCalc.CHILDREN && children==null)) {
-                // i.e. this is the bottom node/segment.  Just return the size.  also equal to square.getLength()
+                // i.e. this is the bottom node/segment.  Just return the size.  also equal to segmentLine.getLength()
                 return getSegmentLength();
             }
             // else...
