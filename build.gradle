@@ -11,7 +11,11 @@ apply plugin: 'java-library'
 apply plugin: "eclipse"
 
 group = 'rnrf'
-description = 'Real Number Ranged Filtering'
+description = """
+  Real Number Ranged Filtering for Pub/Sub systems like Solace.
+  Can be used with any pub/sub system that supports prefix wildcards.
+  Project name: ${project.name}"""
+
 
 // In this section you declare where to find the dependencies of your project
 repositories {
@@ -34,9 +38,8 @@ dependencies {
     implementation  'org.locationtech.jts:jts:1.16.0'
     implementation 'org.locationtech.jts.io:jts-io-common:1.16.0'
     
-    compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.11.1'
-    compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.11.1'
-        
-}
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.11.1'
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.11.1'
 
+}
 
