@@ -15,4 +15,4 @@ include 'api'
 include 'services:webservice'
 */
 
-rootProject.name = 'RangedGradle'
+rootProject.name = 'pubsub-geo-filtering'
