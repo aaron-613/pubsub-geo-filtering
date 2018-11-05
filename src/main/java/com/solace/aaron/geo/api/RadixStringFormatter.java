@@ -158,7 +158,7 @@ public class RadixStringFormatter {
 	 * Rather than using the defined static methods, this allows you to instantiate an object that can be reused.
 	 * Typically within a system, the radix, factor, and padding are fixed, so let's just lock them in for ease of use.
 	 * @param radix
-	 * @param factor
+	 * @param scale
 	 * @param padding
 	 * @param paddingForNegs
 	 */
