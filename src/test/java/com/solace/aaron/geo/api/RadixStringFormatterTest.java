@@ -1,9 +1,17 @@
-package com.solace.aaron.rnrf;
+package com.solace.aaron.geo.api;
 
 import org.junit.Test;
+
+import com.solace.aaron.geo.api.RadixStringFormatter;
+
 import static org.junit.Assert.*;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class RadixStringFormatterTest {
+	
+	Logger logger = LogManager.getLogger(RadixStringFormatterTest.class);
 	
     @Test
     public void factorTests() {
@@ -23,7 +31,15 @@ public class RadixStringFormatterTest {
     	results &= converted.equals("000000");
     	converted = new RadixStringFormatter.Helper().radix(10).scale(0).padding(10).paddingForNegs(true).convert(123.45678,6);
     	results &= converted.equals("00000");
-   	
+
+    	System.out.println(new RadixStringFormatter.Helper().radix(10).scale(0).padding(10).paddingForNegs(true).debugConvert(123.45678,0));
+    	System.out.println(new RadixStringFormatter.Helper().radix(10).scale(0).padding(10).paddingForNegs(true).debugConvert(123.45678,1));
+    	System.out.println(new RadixStringFormatter.Helper().radix(10).scale(0).padding(10).paddingForNegs(true).debugConvert(123.45678,2));
+    	System.out.println(new RadixStringFormatter.Helper().radix(10).scale(0).padding(10).paddingForNegs(true).debugConvert(123.45678,3));
+    	System.out.println(new RadixStringFormatter.Helper().radix(10).scale(0).padding(10).paddingForNegs(true).debugConvert(123.45678,4));
+    	System.out.println(new RadixStringFormatter.Helper().radix(10).scale(0).padding(10).paddingForNegs(true).debugConvert(123.45678,5));
+    	System.out.println(new RadixStringFormatter.Helper().radix(10).scale(0).padding(10).paddingForNegs(true).debugConvert(123.45678,6));
+    	
         assertTrue("Check that my conversion works properly", results);
     }
     
@@ -47,6 +63,19 @@ public class RadixStringFormatterTest {
     	results &= converted.equals("00123456780");
    	
         assertTrue("Check that my conversion works properly", results);
+        
+        logger.info("Showing the effect of the scale element, effectively moves the radix point");
+    	logger.info(new RadixStringFormatter.Helper().radix(10).scale(0).padding(10).paddingForNegs(true).debugConvert(123.45678,0));
+    	logger.info(new RadixStringFormatter.Helper().radix(10).scale(1).padding(10).paddingForNegs(true).debugConvert(123.45678,0));
+    	logger.info(new RadixStringFormatter.Helper().radix(10).scale(2).padding(10).paddingForNegs(true).debugConvert(123.45678,0));
+    	logger.info(new RadixStringFormatter.Helper().radix(10).scale(3).padding(10).paddingForNegs(true).debugConvert(123.45678,0));
+    	logger.info(new RadixStringFormatter.Helper().radix(10).scale(4).padding(10).paddingForNegs(true).debugConvert(123.45678,0));
+    	logger.info(new RadixStringFormatter.Helper().radix(10).scale(5).padding(10).paddingForNegs(true).debugConvert(123.45678,0));
+    	logger.info(new RadixStringFormatter.Helper().radix(10).scale(6).padding(10).paddingForNegs(true).debugConvert(123.45678,0));
+    	logger.info(new RadixStringFormatter.Helper().radix(10).scale(-1).padding(10).paddingForNegs(true).debugConvert(123.45678,0));
+    	logger.info(new RadixStringFormatter.Helper().radix(10).scale(-2).padding(10).paddingForNegs(true).debugConvert(123.45678,0));
+    	logger.info(new RadixStringFormatter.Helper().radix(10).scale(-3).padding(10).paddingForNegs(true).debugConvert(123.45678,0));
+
     }
     
     @Test
