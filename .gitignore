@@ -1,6 +1,14 @@
 .gradle
-build
-.classpath
 .project
+.classpath
 .settings
-bin
+api/build
+api/.classpath
+api/.project
+api/.settings
+api/bin
+submgr/build
+submgr/.classpath
+submgr/.project
+submgr/.settings
+submgr/bin
