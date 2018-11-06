@@ -12,6 +12,8 @@ import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.simplify.DouglasPeuckerSimplifier;
@@ -40,9 +42,10 @@ import com.solacesystems.jcsmp.XMLMessageProducer;
 
 public class GeoRoutingSubscriptionManager implements XMLMessageListener {
 
-    private static final String REQUEST_TOPIC_V2 = "request/geo_filter";
+    private static final String REQUEST_TOPIC_V3 = "geo/request/submgr/>";
 
-    private ExecutorService executorService = Executors.newFixedThreadPool(20);
+    private static final int NUM_OF_THREADS = 1;
+    private ExecutorService executorService = Executors.newFixedThreadPool(NUM_OF_THREADS);
     private LinkedBlockingQueue<BytesXMLMessage> requestQueue = new LinkedBlockingQueue<BytesXMLMessage>();
     
     enum SubAction {
@@ -56,7 +59,7 @@ public class GeoRoutingSubscriptionManager implements XMLMessageListener {
         
         RequestHandler(int id) {
             this.id = id;
-            System.out.println("RequestHandler "+id+" has started.");
+            logger.info("RequestHandler "+id+" has started.");
         }
 
         @Override
@@ -65,9 +68,9 @@ public class GeoRoutingSubscriptionManager implements XMLMessageListener {
                 while (true) {
                     BytesXMLMessage origMessage = requestQueue.take();
                     try {
-                        System.out.println("vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv");
-                        System.out.println(origMessage.dump());
-                        System.out.println("Received request message, trying to parse it");
+                        logger.info("vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv");
+                        logger.info(origMessage.dump());
+                        logger.info("Received request message, trying to parse it");
                         String body;
                         if (origMessage instanceof TextMessage) {
                             body = ((TextMessage)origMessage).getText();
@@ -77,11 +80,11 @@ public class GeoRoutingSubscriptionManager implements XMLMessageListener {
                             bb.get(bytes);
                             body = new String(bytes,Charset.forName("UTF-8"));
                         }
-                        System.out.println("COORDS: "+body);
+                        logger.info("COORDS: "+body);
                         produceResponse(body,origMessage);
-                        System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+                        logger.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
                     } catch (JCSMPException e) {
-                        System.out.println("Failed to parse the request message:");
+                        logger.info("Failed to parse the request message:");
                         e.printStackTrace();
                     } catch (RuntimeException e) {
                         e.printStackTrace();
@@ -89,7 +92,7 @@ public class GeoRoutingSubscriptionManager implements XMLMessageListener {
                     
                 }
             } catch (InterruptedException e) {
-                System.out.println("I got interrupted waiting to take a request off the queue");
+                logger.info("I got interrupted waiting to take a request off the queue");
             }
         }
     };
@@ -106,7 +109,7 @@ public class GeoRoutingSubscriptionManager implements XMLMessageListener {
     private final String user;
     private final String password;
 
-//    private static final Logger LOGGER = LogManager.getLogger(GeoRoutingSubscriptionManager2.class);
+    private static final Logger logger = LogManager.getLogger(GeoRoutingSubscriptionManager.class);
 
     public GeoRoutingSubscriptionManager(String host, String vpn, String user, String password) {
         this.host = host;
@@ -142,7 +145,7 @@ public class GeoRoutingSubscriptionManager implements XMLMessageListener {
             tp.setName(search.topicPrefix + "*/*" + search.topicSuffix);
             tp.setRxAllDeliverToOne(false);
             Topic topic = JCSMPFactory.onlyInstance().createTopic(tp);
-            System.out.println(action.name()+": "+topic.toString());
+            logger.info(action.name()+": "+topic.toString());
             try {
                 if (action == SubAction.ADD) {
                     session.addSubscription(clientName,topic,0);//JCSMPSession.WAIT_FOR_CONFIRM);
@@ -158,9 +161,9 @@ public class GeoRoutingSubscriptionManager implements XMLMessageListener {
 //        while (!cond.isDone()) {
 //            grid.splitOne();
 //            System.out.printf("Range: [%.1f : %.1f]%n",grid.getCoarsestFactor(),grid.getFinestFactor());
-//            System.out.println("inter ratio: "+grid.getCurrentCoverageRatio());
+//            logger.info("inter ratio: "+grid.getCurrentCoverageRatio());
 //            subs = grid.getSubs();
-//            System.out.println("sub count: "+subs.size());
+//            logger.info("sub count: "+subs.size());
 //            if (action == SubAction.ADD) sendMessage(createReplyMessage(search,grid),origMsg.getReplyTo());
 //            try {
 //                Thread.sleep(1000);
@@ -169,9 +172,9 @@ public class GeoRoutingSubscriptionManager implements XMLMessageListener {
 //        }
         grid.splitToRatio(search.accuracy,search.numSubs);
 //        System.out.printf("Range: [%.1f : %.1f]%n",grid.getCoarsestFactor(),grid.getFinestFactor());
-        System.out.println("inter ratio: "+grid.getCurrentCoverageRatio());
+        logger.info("inter ratio: "+grid.getCurrentCoverageRatio());
         subs = grid.getSubs();
-        System.out.println("sub count: "+subs.size());
+        logger.info("sub count: "+subs.size());
         // this sends a message with 
         if (action == SubAction.ADD) sendReply(origMsg,createReplyMessage(search,grid));
         subs = grid.getSubs();
@@ -181,7 +184,7 @@ public class GeoRoutingSubscriptionManager implements XMLMessageListener {
             tp.setRxAllDeliverToOne(false);
             Topic topic = JCSMPFactory.onlyInstance().createTopic(tp);
             try {
-//                System.out.println(action.name()+": "+topic.toString());
+//                logger.info(action.name()+": "+topic.toString());
                 if (action == SubAction.ADD) {
                     session.addSubscription(clientName,topic,0);
                 } else {
@@ -198,18 +201,18 @@ public class GeoRoutingSubscriptionManager implements XMLMessageListener {
     private BytesXMLMessage createReplyMessage(Search search, RadixRangeSearch2d grid) {
         BytesXMLMessage replyMessage = JCSMPFactory.onlyInstance().createMessage(BytesXMLMessage.class);
         List<String> subs = grid.getSubs();
-        System.out.println("A total of "+subs.size()+" subscriptions were generated");
+        logger.info("A total of "+subs.size()+" subscriptions were generated");
         int subBytes = 0;
         for (String sub : subs) {
         	subBytes += sub.length();
         }
-        System.out.println("Total # of sub bytes = "+subBytes);
-        System.out.println("Final area coverage ratio = "+grid.getCurrentCoverageRatio());
+        logger.info("Total # of sub bytes = "+subBytes);
+        logger.info("Final area coverage ratio = "+grid.getCurrentCoverageRatio());
         StringBuilder sb = new StringBuilder();
         String result;
         if ("blah".equals("blasbab")) {
             Geometry union = grid.getUnion();
-            System.out.println("Number of geometries: "+union.getNumGeometries());
+            logger.info("Number of geometries: "+union.getNumGeometries());
             for (int i=0;i<union.getNumGeometries();i++) {
                 Geometry single = union.getGeometryN(i);
                 // simplify!
@@ -256,7 +259,7 @@ public class GeoRoutingSubscriptionManager implements XMLMessageListener {
         try {
             requestQueue.add(origMessage);
         } catch (IllegalStateException e) {
-            System.out.println("Queue is full???  Cannot add any more requests to queue");
+            logger.info("Queue is full???  Cannot add any more requests to queue");
             e.printStackTrace();
         }
     }
@@ -267,7 +270,7 @@ public class GeoRoutingSubscriptionManager implements XMLMessageListener {
 
     
     void run() throws JCSMPException {
-        System.out.println("About to create session.");
+        logger.info("About to create session.");
         properties = new JCSMPProperties();
         properties.setProperty(JCSMPProperties.HOST,host);
         //properties.setProperty(JCSMPProperties.HOST,"172.31.234.60");
@@ -276,7 +279,7 @@ public class GeoRoutingSubscriptionManager implements XMLMessageListener {
         properties.setProperty(JCSMPProperties.USERNAME,user);
         properties.setProperty(JCSMPProperties.PASSWORD,password);
         properties.setBooleanProperty(JCSMPProperties.REAPPLY_SUBSCRIPTIONS, true);
-        properties.setBooleanProperty(JCSMPProperties.IGNORE_DUPLICATE_SUBSCRIPTION_ERROR,true);  // shouldn't get any of these now
+        properties.setBooleanProperty(JCSMPProperties.IGNORE_DUPLICATE_SUBSCRIPTION_ERROR,true);
         properties.setBooleanProperty(JCSMPProperties.IGNORE_SUBSCRIPTION_NOT_FOUND_ERROR,true);
         JCSMPChannelProperties channelProps = new JCSMPChannelProperties();
         channelProps.setConnectRetries(3);
@@ -285,7 +288,7 @@ public class GeoRoutingSubscriptionManager implements XMLMessageListener {
         session = JCSMPFactory.onlyInstance().createSession(properties,JCSMPFactory.onlyInstance().getDefaultContext(),new SessionEventHandler() {
             @Override
             public void handleEvent(SessionEventArgs event) {
-                System.out.println(">>>>>>>>>>>>>>>>>>>  "+event.toString());
+                logger.warn(">>>>>>>>>>>>>>>>>>>  "+event.toString());
             }
         });
         session.setProperty(JCSMPProperties.CLIENT_NAME,"GeoSubMgr_"+session.getProperty(JCSMPProperties.CLIENT_NAME));
@@ -301,7 +304,7 @@ public class GeoRoutingSubscriptionManager implements XMLMessageListener {
                 
                 @Override
                 public void handleError(String messageID, JCSMPException cause, long timestamp) {
-                    System.out.println("##### got this publisher error: "+cause.toString());
+                    logger.error("##### got this publisher error: "+cause.toString());
                 }
             });
             final int NUM_OF_THREADS = 1;
@@ -310,8 +313,8 @@ public class GeoRoutingSubscriptionManager implements XMLMessageListener {
             }
             consumer.start();
 //            session.addSubscription(JCSMPFactory.onlyInstance().createTopic(REQUEST_TOPIC), true);
-            session.addSubscription(JCSMPFactory.onlyInstance().createTopic(REQUEST_TOPIC_V2), true);
-            System.out.println("Listening for request messages...");
+            session.addSubscription(JCSMPFactory.onlyInstance().createTopic(REQUEST_TOPIC_V3), true);
+            logger.info("Listening for request messages...");
             while (true) {
                 Thread.sleep(10000);
             }
@@ -332,7 +335,7 @@ public class GeoRoutingSubscriptionManager implements XMLMessageListener {
     public static void main(String... args) throws JCSMPException  {
         if (args.length < 3) {
             System.out.println("Not enough args");
-            System.out.println("Usage: GeoRoutingSubscriptionManager2 <IP or hostname> <vpn> <user> <password>");
+            System.out.println("Usage: "+GeoRoutingSubscriptionManager.class.getName()+" <Solace IP or hostname> <vpn> <user> <password>");
             System.exit(-1);
         }
         String host = args[0];

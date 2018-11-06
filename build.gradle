@@ -1,16 +1,41 @@
 
+plugins {
+    id 'org.asciidoctor.convert' version '1.5.6' apply false 
+}
 
-allprojects {
-    task hello {
-        doLast { task ->
-            println "I'm $task.project.name"
-        }
+configure(subprojects.findAll { it.name.startsWith('geo') }) {
+
+    apply plugin: 'java'
+
+    dependencies {
+        // for my various geometric calculations
+        implementation 'org.locationtech.jts:jts:1.16.0'
+        implementation 'org.locationtech.jts.io:jts-io-common:1.16.0'
+        // new an improved logging framework, no more slf4j
+        implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.11.1'
+        implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.11.1'
+        // JUnit framework for unit tests
+        testImplementation 'junit:junit:4.12'
     }
 }
+
+allprojects {
+
+  repositories {
+    jcenter()
+    mavenCentral()
+  }
+
+  task hello { doLast { task ->
+            println "I'm $task.project.name"
+      }
+  }
+}
+
 subprojects {
-    hello {
-        doLast {
-            println "- I depend on water"
-        }
+  hello {
+    doLast {
+      println "- I depend on water"
     }
+  }
 }
