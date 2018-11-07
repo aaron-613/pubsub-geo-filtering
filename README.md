@@ -2,6 +2,8 @@
 
 Finally getting my geo-filtering code posted up to GitHub.  Will document more later.
 
+![Circular search area](https://github.com/aaron-613/pubsub-geo-filtering/blob/master/stuff/circle.png "Circular search area")
+
 # Basics
 
 * includes both 2D and 1D versions
