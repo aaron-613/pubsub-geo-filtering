@@ -137,7 +137,7 @@ public class GeoRoutingSubscriptionManager implements XMLMessageListener {
         ClientName clientName = JCSMPFactory.onlyInstance().createClientName(origMsg.getSenderId());
         Geometry target = search.target;
 //        Geometry target = WktTests.getOrchard();
-        RadixRangeSearch2d grid = new RadixRangeSearch2d(10,6,7,4,4,true,true,target);  //TODO target is null essentially if doing an 'undo'  
+        RadixRangeSearch2d grid = new RadixRangeSearch2d(10,6,7,4,4,100,200,target);  //TODO target is null essentially if doing an 'undo'  
         List<String> subs = grid.getSubs();
         if (!grid.intersects()) {
             // means that no search area was specified, or something completely outside the earth was.  So add/remove everything!

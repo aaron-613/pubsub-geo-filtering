@@ -37,8 +37,8 @@ public class RadixUtils {
      * @return
      */
     private static int calcFactor(double maxRange, int radix) {
-    	if (radix == 10) return -(int)Math.ceil(Math.log10(Math.abs(maxRange)));
-    	else return -(int)Math.ceil(Math.log10(Math.abs(maxRange))/Math.log10(radix));
+        if (radix == 10) return -(int)Math.ceil(Math.log10(Math.abs(maxRange)));
+        else return -(int)Math.ceil(Math.log10(Math.abs(maxRange))/Math.log10(radix));
     }
     
     /**
@@ -72,12 +72,12 @@ public class RadixUtils {
     private static final int MIN_FACTOR = -30;  // i.e. from 1/(2^-30) --&gt; 1/(2^50)
     private static final int MAX_FACTOR = 50;  // how big a range do we want to calculate?  because base2 needs a lot
     static {
-    	for (int base=2;base<=36;base++) {
-    		INVERSE_FACTORS.put(base, new ArrayList<Double>());
-    		for (int factor=MIN_FACTOR; factor<=MAX_FACTOR; factor++) {
-    			INVERSE_FACTORS.get(base).add(1.0/Math.pow(base, factor));
-    		}
-    	}
+        for (int base=2;base<=36;base++) {
+            INVERSE_FACTORS.put(base, new ArrayList<Double>());
+            for (int factor=MIN_FACTOR; factor<=MAX_FACTOR; factor++) {
+                INVERSE_FACTORS.get(base).add(1.0/Math.pow(base, factor));
+            }
+        }
     }
     
     /**
@@ -88,61 +88,61 @@ public class RadixUtils {
      */
     public static double lookupInverseFactors(int radix, int factor) {
         try {
-        	return INVERSE_FACTORS.get(radix).get(factor-MIN_FACTOR);
+            return INVERSE_FACTORS.get(radix).get(factor-MIN_FACTOR);
         } catch (IndexOutOfBoundsException e) {
             System.err.println("(Not an error, just a note): RadixUtils.lookupInverseFactors is out of bounds: factor "+factor+", radix "+radix);
             return 1.0/Math.pow(radix,factor);
         } catch (NullPointerException e) {
-        	// this will happen when asking for any radix != 2,4,8,10,16
+            // this will happen when asking for any radix != 2,4,8,10,16
             //System.err.println("ASKING FOR A NON-EXISTENT FACTOR!  "+factor+", radix "+radix);
             return 1.0/Math.pow(radix,factor);  // just compute it regular
         }
     }
     
-	/**
-	 * Returns the smallest value that a number can change and be "detected" or represented by
-	 * the 'factor' (i.e. num digits to the right of the decimal/radix point), at a given
-	 * radix.  For example, in base 10 with factor 3, this would return 0.001.  This should
-	 * be the equivalent to the inverse of getFactor().
-	 * @param radix
-	 * @param factor
-	 * @return
-	 */
-	public static double lossOfPrecision(int radix, int factor) {
-		return lookupInverseFactors(radix,factor);
-	}
-	
-	/** This method will return the maximum possible decimal equivalent for a particular
-	 * radix and padding amount.  For example, in binary base 2 with padding == 8, this would
-	 * return 255.
-	 * 
-	 * @param radix
-	 * @param numPadding
-	 * @return
-	 */
-	public static int maxDecEquivPossible(int radix, int numPadding) {
-		return (int)Math.pow(radix,numPadding)-1;
-	}
-	
-	/**
-	 * This method will specify how many digits are required to the left of the decimal/radix
-	 * point to ensure display the maximum decimal equivalent in a particular radix.  For
-	 * example, a value of 253 in radix 16 (hex) would require 2 digits. 
-	 * @param maxVal
-	 * @param radix
-	 * @return
-	 */
-	public static int numPaddingNeeded(int radix, int maxVal) {
-		int digitCount = 0;
-		while (maxVal > 0) {
-			maxVal /= radix;
-			digitCount++;
-		}
-		return digitCount;
-	}
+    /**
+     * Returns the smallest value that a number can change and be "detected" or represented by
+     * the 'factor' (i.e. num digits to the right of the decimal/radix point), at a given
+     * radix.  For example, in base 10 with factor 3, this would return 0.001.  This should
+     * be the equivalent to the inverse of getFactor().
+     * @param radix
+     * @param factor
+     * @return
+     */
+    public static double lossOfPrecision(int radix, int factor) {
+        return lookupInverseFactors(radix,factor);
+    }
+    
+    /** This method will return the maximum possible decimal equivalent for a particular
+     * radix and padding amount.  For example, in binary base 2 with padding == 8, this would
+     * return 255.
+     * 
+     * @param radix
+     * @param numPadding
+     * @return
+     */
+    public static int maxDecEquivPossible(int radix, int numPadding) {
+        return (int)Math.pow(radix,numPadding)-1;
+    }
+    
+    /**
+     * This method will specify how many digits are required to the left of the decimal/radix
+     * point to ensure display the maximum decimal equivalent in a particular radix.  For
+     * example, a value of 253 in radix 16 (hex) would require 2 digits. 
+     * @param maxVal
+     * @param radix
+     * @return
+     */
+    public static int numPaddingNeeded(int radix, int maxVal) {
+        int digitCount = 0;
+        while (maxVal > 0) {
+            maxVal /= radix;
+            digitCount++;
+        }
+        return digitCount;
+    }
 
-	
-	private RadixUtils() {
-		throw new AssertionError("Please do not instantiate this helper class");
-	}
+    
+    private RadixUtils() {
+        throw new AssertionError("Please do not instantiate this helper class");
+    }
 }

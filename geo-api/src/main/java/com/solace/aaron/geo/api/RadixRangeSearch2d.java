@@ -9,6 +9,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.GeometryCollection;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Polygon;
 
@@ -20,46 +21,21 @@ import org.locationtech.jts.geom.Polygon;
 public class RadixRangeSearch2d {
 
     private static final double CUT_OFF_COVERAGE_RATIO = 0.995;  // no point in splitting if above this. don't use 1.0 in case of float round error
-    private static final double PADDING_AMOUNT = 0.0000002;  // used to pad the squares (geometry) just a touch so when taking the union they will overlap properly
+//    private static final double PADDING_AMOUNT = 0.0000002;  // used to pad the squares (geometry) just a touch so when taking the union they will overlap properly
 
     private static final Logger logger = LogManager.getLogger(RadixRangeSearch2d.class);
     
     private static final GeometryFactory GEOMETRY_FACTORY = new GeometryFactory();
 
-    /**
-     * Helps break up the 2D universe and keep track of which signs each quarter has
-     * @author Aaron Lee
-     *
-     */
-    enum Quadrant {
-        PX_MY(1,-1),   // +x,-y   (or could think of this as +lat,-lon)
-        PX_PY(1,1),    // +x,+y   (or +lat,+lon)
-        MX_PY(-1,1),   // -x,+y   (or -lat,+lon)
-        MX_MY(-1,-1),  // -x,-y   (or -lat,-lon)
-        ;
-        
-        final int xNegativeModifier;
-        final int yNegativeModifier;
-        
-        Quadrant(int xModifier, int yModifier) {
-            this.xNegativeModifier = xModifier;
-            this.yNegativeModifier = yModifier;
-        }
-        
-        @Override
-        public String toString() {
-            return this.name();
-        }
-    }
 
     private final Geometry target;
-    private final List<RadixGrid> quadGrids = new ArrayList<RadixGrid>();  // need 4 grids with different origins for each
+    private final RadixGrid rootNode;
     
     /** Tested with 2, 4, 8, 10, and 16 **/
     private final int radix;
     
-    private final int xScale;
-    private final int yScale;
+    private final int xFixedScale;
+    private final int yFixedScale;
     
     private final RadixStringFormatter xStringFormatter;
     private final RadixStringFormatter yStringFormatter;
@@ -72,23 +48,26 @@ public class RadixRangeSearch2d {
      * @param radix
      * @param target
      */
-    public RadixRangeSearch2d(int radix, int xPadding, int yPadding, int xScale, int yScale, boolean xNeedsNegs, boolean yNeedsNegs, Geometry target) {
-        logger.fatal("### Starting create RadixRangeSearch2d");
+    public RadixRangeSearch2d(int radix, int xPadding, int yPadding, int xScale, int yScale, int xOffset, int yOffset, Geometry target) {
+        logger.info("### Starting create RadixRangeSearch2d");
+        logger.debug(target.toString());
         this.target = target;
         this.radix = radix;
-        this.xScale = xScale;  // what is the offset, for the various later calculations?
-        this.yScale = yScale;
-        this.xStringFormatter = new RadixStringFormatter(radix, xScale, xPadding, xNeedsNegs);
-        this.yStringFormatter = new RadixStringFormatter(radix, yScale, yPadding, yNeedsNegs);
-        for (Quadrant quadrant : Quadrant.values()) {  // up to 4 possible combinations
-            RadixGrid grid = new RadixGrid(Collections.singletonList(target),quadrant,0,0,xScale-xPadding,yScale-yPadding);
-            if (grid.intersects()) {
-                quadGrids.add(grid);  // only track ones we hit
-                // for this huge grid, compute all the children
-                splitContenders.addAll(grid.buildChildren());
-            }
-        }
-        Collections.sort(splitContenders,new RadixGridRatioComparator());
+//        this.xFixedPadding = xPadding;
+//        this.yFixedPadding = yPadding;
+        this.xFixedScale = xScale;  // what is the offset, for the various later calculations?
+        this.yFixedScale = yScale;
+        this.xStringFormatter = new RadixStringFormatter(radix, xScale, xPadding, xOffset);
+        this.yStringFormatter = new RadixStringFormatter(radix, yScale, yPadding, yOffset);
+        String xTS = "";
+        String yTS = "";
+        rootNode = new RadixGrid(Collections.singletonList(target),xTS,yTS,xScale-xPadding,yScale-yPadding);
+        rootNode.buildChildren();
+        splitContenders.add(rootNode);
+//        if (grid.intersects()) {
+//            splitContenders.addAll(grid.buildChildren());
+//        }
+//        Collections.sort(splitContenders,new RadixGridRatioComparator());
     }
     
     public void splitOne() {  // split one, no matter what
@@ -143,6 +122,9 @@ public class RadixRangeSearch2d {
             }
         }
         logger.debug("$$$$ TOTAL TIME: {} total",(System.nanoTime()-totalTime)/1000000);
+        if (getUnion() instanceof GeometryCollection) {
+        	throw new AssertionError("Union is not a single object");
+        }
     }
 
     /**
@@ -151,7 +133,8 @@ public class RadixRangeSearch2d {
      * @return
      */
     public boolean intersects() {
-        return !quadGrids.isEmpty();
+        return rootNode.intersects();
+//        return !quadGrids.isEmpty();
     }
 
     /**
@@ -160,27 +143,15 @@ public class RadixRangeSearch2d {
      * @return
      */
     public List<String> getSubs() {
-        List<String> subs = new ArrayList<String>();
-        for (RadixGrid grid : quadGrids) {
-            subs.addAll(grid.getSubs());
-        }
-        return subs;
+        return rootNode.getSubs();
     }
 
     public List<String[]> getSquares() {
-        List<String[]> squares = new ArrayList<String[]>();
-        for (RadixGrid grid : quadGrids) {
-            squares.addAll(grid.getSquares());
-        }
-        return squares;
+        return rootNode.getSquares();
     }
     
     public List<Polygon> getWktPolygons() {
-        List<Polygon> polygons = new ArrayList<>();
-        for (RadixGrid grid : quadGrids) {
-        	polygons.addAll(grid.getPolygons());
-        }
-    	return polygons;
+        return rootNode.getPolygons();
     }
     
     public double getCurrentCoverageRatio() {
@@ -188,11 +159,7 @@ public class RadixRangeSearch2d {
     }
     
     private double getActualArea() {
-        double area = 0;
-        for (RadixGrid grid : quadGrids) {
-            area += grid.getActualAreaRecursive(DepthOfCalc.ACTUAL);
-        }
-        return area;
+        return rootNode.getActualAreaRecursive(DepthOfCalc.ACTUAL);
     }
 
     /**
@@ -200,13 +167,7 @@ public class RadixRangeSearch2d {
      * @return
      */
     public Geometry getUnion() {
-    	//Geometry union = null;
-        Geometry union = GEOMETRY_FACTORY.createPolygon(new Coordinate[0]);
-        for (RadixGrid grid : quadGrids) {
-            /*if (union == null) union = grid.getUnion();
-            else*/ union = union.union(grid.getUnion());
-        }
-        return union;
+        return rootNode.getUnion();
     }
     
     enum DepthOfCalc {
@@ -233,7 +194,7 @@ public class RadixRangeSearch2d {
     
     /* HELPER FUNCTIONS ******************************************************************************/
 
-    static String[] staticBuildGridCoords(double innerX, double innerY, int radix, int xFactor, int yFactor, Quadrant quadrant) {
+/*    static String[] staticBuildGridCoords(double innerX, double innerY, int radix, int xFactor, int yFactor, Quadrant quadrant) {
         double x1 = innerX;  // doesn't matter which 2 corners of square, as long as they are antipodal
         double y1 = innerY;
         double x2 = innerX+(RadixUtils.lookupInverseFactors(radix,xFactor)*quadrant.xNegativeModifier);
@@ -262,7 +223,7 @@ public class RadixRangeSearch2d {
         square[4] = new Coordinate(innerX,innerY);  // repeat coord 0
         return GEOMETRY_FACTORY.createPolygon(square);
     }
-    
+*/    
     /** Will return true for more vertical shapes */
     static StripeDirection staticWhichWayToSplit(Geometry intersectedTarget, Geometry square) {
         // what is the shape of this thing?
@@ -301,13 +262,8 @@ public class RadixRangeSearch2d {
     public class RadixGridRatioComparator implements Comparator<RadixGrid> {
         
         public double buildIntersectionRatio(RadixRangeSearch2d.RadixGrid grid) {
-//            if (grid.getNumChildren() == 1 && grid.parent.hasSplit) return Double.POSITIVE_INFINITY;
-            // makes it slightly less attractive to split if there are a lot of children (even moreso if this is a child of a 10 parent that hasn't been split yet
-//            return (1-grid.staticCoverageRatio) * grid.getGridArea() / Math.pow(1.2,grid.getNumChildren()-1);  // so if num children == 1, then this does nothing.  if num children == 10, this weights it by an extra
-            // new way...
 //            return (1-grid.staticCoverageRatio) * grid.getGridArea() / (grid.getNumChildren()-1);  // so if num children == 1, makes it positive infinity... forces spitting
             return (1-grid.staticCoverageRatio) * grid.getGridArea() / (grid.getNumChildrenIfSplit()-1);  // so if num children == 1, makes it positive infinity... forces spitting
-//            return (1-grid.staticCoverageRatio) * RangeUtils.lookupInverseFactors(Math.min(grid.xFactor,grid.yFactor)) / (grid.getNumChildrenIfSplit()-1);  // so if num children == 1, makes it positive infinity... forces spitting
         }
 
         @Override
@@ -327,8 +283,9 @@ public class RadixRangeSearch2d {
          */ // e.g. -35.12*/_93.381*
         private String buildTopicSubscription() {
             StringBuilder sb = new StringBuilder();
-            sb.append(xStringFormatter.convert(innerX,quadrant.xNegativeModifier<0,xScale-xFactor)).append("*/");
-            sb.append(yStringFormatter.convert(innerY,quadrant.yNegativeModifier<0,yScale-yFactor)).append('*');
+//            sb.append(xStringFormatter.convert(innerX,quadrant.xNegativeModifier<0,xFixedScale-xFactor)).append("*/");
+//            sb.append(yStringFormatter.convert(innerY,quadrant.yNegativeModifier<0,yFixedScale-yFactor)).append('*');
+            sb.append(xRadixString).append("*/").append(yRadixString).append("*");
             return sb.toString();
         }
         
@@ -337,11 +294,24 @@ public class RadixRangeSearch2d {
          * @return
          */
         private String[] buildGridCoords() {
-            return staticBuildGridCoords(innerX, innerY, radix, xFactor, yFactor, quadrant);
+//            return staticBuildGridCoords(innerX, innerY, radix, xFactor, yFactor, quadrant);
+            String[] coords2 = {
+            		Double.toString(Math.min(innerX,outerX)),
+            		Double.toString(Math.min(innerY,outerY)),
+            		Double.toString(Math.max(innerX,outerX)),
+            		Double.toString(Math.max(innerY,outerY))
+            };
+            return coords2;
         }
         
         private Polygon buildGridPolygon(boolean slightlyInflate) {
-            return staticBuildGridPolygon(innerX, innerY, radix, xFactor, yFactor, quadrant, slightlyInflate);
+            Coordinate[] square = new Coordinate[5];
+            square[0] = new Coordinate(innerX,innerY);
+            square[1] = new Coordinate(innerX,outerY);
+            square[2] = new Coordinate(outerX,outerY);
+            square[3] = new Coordinate(outerX,innerY);
+            square[4] = new Coordinate(innerX,innerY);  // repeat coord 0
+            return GEOMETRY_FACTORY.createPolygon(square);
         }
         
 
@@ -352,9 +322,12 @@ public class RadixRangeSearch2d {
         //private final Geometry target;
         private final List<Geometry> intersectedTargets = new ArrayList<>();
         private int biggestIntersectedTarget;
-        private final Quadrant quadrant;
+        private final String xRadixString;
+        private final String yRadixString;
         private final double innerX;  // inner Coordinate (lat for geo), in decimal
         private final double innerY;
+        private final double outerX;  // inner Coordinate (lat for geo), in decimal
+        private final double outerY;
         private final int xFactor; // this is essentially the depth... level = 0 -> no decimal places, lev 1...
         private final int yFactor;
         private final Polygon gridPolygon;
@@ -363,18 +336,21 @@ public class RadixRangeSearch2d {
         private boolean hasSplit = false;  // if there are 10 (radix) whole children, no point in splitting right there as coverage ratio won't change
         private RadixGrid[] children = null;
 
-        RadixGrid(RadixGrid parent, double innerX, double innerY, int xFactor, int yFactor) {
-            this(parent.intersectedTargets,parent.quadrant,innerX,innerY,xFactor,yFactor);
+        private RadixGrid(RadixGrid parent, String xRadixString, String yRadixString, int xFactor, int yFactor) {
+            this(parent.intersectedTargets,xRadixString,yRadixString,xFactor,yFactor);
             this.parent = parent;
         }
         
         /**
          * This constructor should only be used directly by parent GridContainer... everything else internally should use the one that includes 'parent' so it maintains a link
          */
-        private RadixGrid(List<Geometry> parentsIntersectedTargets, Quadrant quadrant, double innerX, double innerY, int xFactor, int yFactor) {
-            this.quadrant = quadrant;
-            this.innerX = innerX;
-            this.innerY = innerY;
+        private RadixGrid(List<Geometry> parentsIntersectedTargets, String xRadixString, String yRadixString, int xFactor, int yFactor) {
+            this.xRadixString = xRadixString;
+            this.yRadixString = yRadixString;
+            this.innerX = xStringFormatter.getInner(xRadixString);
+            this.innerY = yStringFormatter.getInner(yRadixString);
+            this.outerX = xStringFormatter.getOuter(xRadixString);
+            this.outerY = yStringFormatter.getOuter(yRadixString);
             this.xFactor = xFactor;
             this.yFactor = yFactor;
             this.gridPolygon = buildGridPolygon(false);
@@ -400,13 +376,13 @@ public class RadixRangeSearch2d {
          * Returns a list of all the potential children grids that could be split further
          */
         private List<RadixGrid> buildChildren() {
-            if (xFactor == xScale && yFactor == xScale) {  // can't split any further
+            if (xFactor == xFixedScale && yFactor == xFixedScale) {  // can't split any further
                 return Collections.emptyList();  // don't go down further after however many decimal places of accuracy!
             }
             // so both decimals can't be maxxed... is it either though?
-            if (xFactor == xScale) {
+            if (xFactor == xFixedScale) {
                 stripeDirection = StripeDirection.HORIZONTAL;
-            } else if (yFactor == yScale) {
+            } else if (yFactor == yFixedScale) {
                 stripeDirection = StripeDirection.VERTICAL;
             }
             // temp objects... used to potentially split both horizontally and vertically and see how it goes
@@ -418,13 +394,21 @@ public class RadixRangeSearch2d {
             int horizFullCoverageKidCount = 0;
             // which way do we split now?
             // let's do both ways and see which is better
+            int strLen = xRadixString.length();
+            char[] childTopicString = new char[strLen+1];
+            xRadixString.getChars(0, strLen, childTopicString, 0);
             for (int i=0;i<radix;i++) {
-                vertKids[i] = new RadixGrid(this,innerX+(i*RadixUtils.lookupInverseFactors(radix,xFactor+1)*quadrant.xNegativeModifier),innerY,xFactor+1,yFactor);
+            	childTopicString[strLen] = RadixStringFormatter.radixConvert(i);
+                vertKids[i] = new RadixGrid(this,new String(childTopicString),yRadixString,xFactor+1,yFactor);
                 if (vertKids[i].intersects()) { vertKidCount++; }
                 if (vertKids[i].staticCoverageRatio >= CUT_OFF_COVERAGE_RATIO) { vertFullCoverageKidCount++; }
             }
+            strLen = yRadixString.length();
+            childTopicString = new char[yRadixString.length()+1];
+            yRadixString.getChars(0, strLen, childTopicString, 0);  // copy the current topic string into the new array
             for (int i=0;i<radix;i++) {
-                horizKids[i] = new RadixGrid(this,innerX,innerY+(i*RadixUtils.lookupInverseFactors(radix,yFactor+1)*quadrant.yNegativeModifier),xFactor,yFactor+1);
+                childTopicString[strLen] = RadixStringFormatter.radixConvert(i);
+                horizKids[i] = new RadixGrid(this,xRadixString,new String(childTopicString),xFactor,yFactor+1);
                 if (horizKids[i].intersects()) { horizKidCount++; }
                 if (horizKids[i].staticCoverageRatio >= CUT_OFF_COVERAGE_RATIO) { horizFullCoverageKidCount++; }
             }
@@ -489,7 +473,8 @@ public class RadixRangeSearch2d {
          */
         private int getNumChildren() {
             if (children == null) {
-                return Integer.MIN_VALUE;  // this can happen when toString is printing out information about children... 
+//                return Integer.MIN_VALUE;  // this can happen when toString is printing out information about children... 
+                return -radix;  // this can happen when toString is printing out information about children... 
             }
             // else...
             int childCount = 0;
@@ -530,10 +515,9 @@ public class RadixRangeSearch2d {
                 sb.append('|');
                 for (int x=0;x<radix;x++) {
                     RadixGrid temp = new RadixGrid(this,
-                    		innerX+(x*RadixUtils.lookupInverseFactors(radix,xFactor-xScale+1)*quadrant.xNegativeModifier),
-                            innerY+(y*RadixUtils.lookupInverseFactors(radix,yFactor-yScale+1)*quadrant.yNegativeModifier),
-                            xFactor-xScale+1,yFactor-yScale+1);
-                    // TODO 'radix' was == 1 on the y coordinate above. Intentional?
+                    		xRadixString+RadixStringFormatter.radixConvert(x),
+                    		yRadixString+RadixStringFormatter.radixConvert(y),
+                            xFactor-xFixedScale+1,yFactor-yFixedScale+1);
                     if (temp.intersects()) sb.append("##");
                     else sb.append("  ");
                 }
@@ -558,7 +542,7 @@ public class RadixRangeSearch2d {
             assert !parent.hasSplit;
             parent.hasSplit = true;
             if (parent.parent != null && !parent.parent.hasSplit) {  // wow 2 levels of unsplit parents. definitely possible!
-                parent.splitUnsplitParent();
+                parent.splitUnsplitParent();  // recursive call
             }
         }
 

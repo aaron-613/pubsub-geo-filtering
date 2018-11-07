@@ -69,12 +69,12 @@ public class RadixRangeSearch1d {
      * @param radix
      * @param target
      */
-    public RadixRangeSearch1d(int radix, int xPadding, int xScale, boolean xNeedsNegs, Geometry target) {
+    public RadixRangeSearch1d(int radix, int xPadding, int xScale, int offset, Geometry target) {
         logger.debug("Starting create RadixRangeSearch1d");
         this.target = target;
         this.radix = radix;
         this.xScale = xScale;  // what is the offset, for the various later calculations?
-        this.xStringFormatter = new RadixStringFormatter(radix, xScale, xPadding, xNeedsNegs);
+        this.xStringFormatter = new RadixStringFormatter(radix, xScale, xPadding, offset);
         for (Hemisphere hemi : Hemisphere.values()) {  // up to 4 possible combinations
             RadixSegment segment = new RadixSegment(Collections.singletonList(target),hemi,0,xScale-xPadding);
             if (segment.intersects()) {
@@ -173,9 +173,9 @@ public class RadixRangeSearch1d {
     public List<LineString> getWktLineStrings() {
         List<LineString> lineStrings = new ArrayList<>();
         for (RadixSegment segment : hemiSegments) {
-        	lineStrings.addAll(segment.getLineSegments());
+            lineStrings.addAll(segment.getLineSegments());
         }
-    	return lineStrings;
+        return lineStrings;
     }
     
     public double getCurrentCoverageRatio() {
@@ -195,7 +195,7 @@ public class RadixRangeSearch1d {
      * @return
      */
     public Geometry getUnion() {
-    	//Geometry union = null;
+        //Geometry union = null;
         Geometry union = GEOMETRY_FACTORY.createLineString(new Coordinate[0]);
         for (RadixSegment segment : hemiSegments) {
             /*if (union == null) union = segment.getUnion();
@@ -215,8 +215,8 @@ public class RadixRangeSearch1d {
         double x1 = innerX;  // doesn't matter which 2 corners of square, as long as they are antipodal
         double x2 = innerX+(RadixUtils.lookupInverseFactors(radix,xFactor)*hemi.xNegativeModifier);
         String[] coords2 = {
-        		Double.toString(Math.min(x1,x2)),
-        		Double.toString(Math.max(x1,x2)),
+                Double.toString(Math.min(x1,x2)),
+                Double.toString(Math.max(x1,x2)),
         };
         return coords2;
     }
@@ -255,7 +255,7 @@ public class RadixRangeSearch1d {
 
         private String buildTopicSubscription() {
             StringBuilder sb = new StringBuilder();
-            sb.append(xStringFormatter.convert(innerX,hemi.xNegativeModifier<0,xScale-xFactor)).append("*");
+            sb.append(xStringFormatter.convert(innerX)).append("*");
             return sb.toString();
         }
         
@@ -298,14 +298,14 @@ public class RadixRangeSearch1d {
             this.segmentLine = buildSegmentLineString(false);
             double maxCoverageRatio = 0;
             for (int i=0;i<parentsIntersectedTargets.size();i++) {
-            	Geometry intersectedTarget = parentsIntersectedTargets.get(i).intersection(this.segmentLine);
-            	this.intersectedTargets.add(intersectedTarget);
-            	if (intersectedTarget.getLength()/getSegmentLength() > maxCoverageRatio) {
-            		maxCoverageRatio = intersectedTarget.getLength()/getSegmentLength();
-            		biggestIntersectedTarget = i;
-            	}
+                Geometry intersectedTarget = parentsIntersectedTargets.get(i).intersection(this.segmentLine);
+                this.intersectedTargets.add(intersectedTarget);
+                if (intersectedTarget.getLength()/getSegmentLength() > maxCoverageRatio) {
+                    maxCoverageRatio = intersectedTarget.getLength()/getSegmentLength();
+                    biggestIntersectedTarget = i;
+                }
             }
-           	this.staticCoverageRatio = maxCoverageRatio;
+               this.staticCoverageRatio = maxCoverageRatio;
         }
         
         /**
@@ -391,7 +391,7 @@ public class RadixRangeSearch1d {
                 sb.append('|');
                 for (int x=0;x<radix;x++) {
                     RadixSegment temp = new RadixSegment(this,
-                    		innerX+(x*RadixUtils.lookupInverseFactors(radix,xFactor-xScale+1)*hemi.xNegativeModifier),
+                            innerX+(x*RadixUtils.lookupInverseFactors(radix,xFactor-xScale+1)*hemi.xNegativeModifier),
                             xFactor-xScale+1);
                     // TODO 'radix' was == 1 on the y coordinate above. Intentional?
                     if (temp.intersects()) sb.append("##");
