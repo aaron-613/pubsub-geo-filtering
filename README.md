@@ -11,6 +11,12 @@ Finally getting my geo-filtering code posted up to GitHub.  Will document more l
    * 1D can be used for any scalar (e.g. altitude, heading, speed)
 * Have updated code to support multiple radixes/bases, from binary base 2 to base 36
 
+# The Algorithm
+
+![blah](https://github.com/aaron-613/pubsub-geo-filtering/blob/master/stuff/base4animation22.gif "Base 4 search construction")
+
+Significant changes to the algorithm have been made to greatly simplify it and improve its usability.
+
 
 # Live Demo
 
