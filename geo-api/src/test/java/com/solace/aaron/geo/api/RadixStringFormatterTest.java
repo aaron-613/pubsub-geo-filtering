@@ -3,7 +3,7 @@ package com.solace.aaron.geo.api;
 import org.junit.Test;
 
 import com.solace.aaron.geo.api.RadixStringFormatter;
-import com.solace.aaron.geo.api.RadixStringFormatter.Helper;
+import com.solace.aaron.geo.api.RadixStringFormatter.Builder;
 
 import static org.junit.Assert.*;
 
@@ -17,66 +17,90 @@ public class RadixStringFormatterTest {
     public void factorTests() {
         boolean results = true;
         String converted;
-        converted = new RadixStringFormatter.Helper().radix(10).scale(0).padding(10).offset(0).convert(123.45678);
+        converted = new RadixStringFormatter.Builder().radix(10).scale(0).width(10).offset(0).convert(123.45678);
         results &= converted.equals("00000000123");
 
         assertTrue("Check that my conversion works properly", results);
-    }
-    
-    public void scaleTests() {
-        boolean results = true;
-        String converted;
-        converted = new RadixStringFormatter.Helper().radix(10).scale(0).padding(10).offset(0).convert(123.45678);
-        results &= converted.equals("00000000123");
-        converted = new RadixStringFormatter.Helper().radix(10).scale(1).padding(10).offset(0).convert(123.45678);
-        results &= converted.equals("00000001234");
-        converted = new RadixStringFormatter.Helper().radix(10).scale(2).padding(10).offset(0).convert(123.45678);
-        results &= converted.equals("00000012345");
-        converted = new RadixStringFormatter.Helper().radix(10).scale(3).padding(10).offset(0).convert(123.45678);
-        results &= converted.equals("00000123456");
-        converted = new RadixStringFormatter.Helper().radix(10).scale(4).padding(10).offset(0).convert(123.45678);
-        results &= converted.equals("00001234567");
-        converted = new RadixStringFormatter.Helper().radix(10).scale(5).padding(10).offset(0).convert(123.45678);
-        results &= converted.equals("00012345678");
-        converted = new RadixStringFormatter.Helper().radix(10).scale(6).padding(10).offset(0).convert(123.45678);
-        results &= converted.equals("00123456780");
-       
-        assertTrue("Check that my conversion works properly", results);
-        
-        logger.info("Showing the effect of the scale element, effectively moves the radix point");
-        logger.info(new RadixStringFormatter.Helper().radix(10).scale(0).padding(10).offset(0).debugConvert(123.45678));
-        logger.info(new RadixStringFormatter.Helper().radix(10).scale(1).padding(10).offset(0).debugConvert(123.45678));
-        logger.info(new RadixStringFormatter.Helper().radix(10).scale(2).padding(10).offset(0).debugConvert(123.45678));
-        logger.info(new RadixStringFormatter.Helper().radix(10).scale(3).padding(10).offset(0).debugConvert(123.45678));
-        logger.info(new RadixStringFormatter.Helper().radix(10).scale(4).padding(10).offset(0).debugConvert(123.45678));
-        logger.info(new RadixStringFormatter.Helper().radix(10).scale(5).padding(10).offset(0).debugConvert(123.45678));
-        logger.info(new RadixStringFormatter.Helper().radix(10).scale(6).padding(10).offset(0).debugConvert(123.45678));
-        logger.info(new RadixStringFormatter.Helper().radix(10).scale(-1).padding(10).offset(0).debugConvert(123.45678));
-        logger.info(new RadixStringFormatter.Helper().radix(10).scale(-2).padding(10).offset(0).debugConvert(123.45678));
-        logger.info(new RadixStringFormatter.Helper().radix(10).scale(-3).padding(10).offset(0).debugConvert(123.45678));
-
     }
 
     @Test
+    public void scaleTests() {
+        boolean results = true;
+        String converted;
+        converted = new RadixStringFormatter.Builder().radix(10).scale(0).width(10).offset(0).convert(123.45678);
+        results &= converted.equals("00000000123");
+        converted = new RadixStringFormatter.Builder().radix(10).scale(1).width(10).offset(0).convert(123.45678);
+        results &= converted.equals("00000001234");
+        converted = new RadixStringFormatter.Builder().radix(10).scale(2).width(10).offset(0).convert(123.45678);
+        results &= converted.equals("00000012345");
+        converted = new RadixStringFormatter.Builder().radix(10).scale(3).width(10).offset(0).convert(123.45678);
+        results &= converted.equals("00000123456");
+        converted = new RadixStringFormatter.Builder().radix(10).scale(4).width(10).offset(0).convert(123.45678);
+        results &= converted.equals("00001234567");
+        converted = new RadixStringFormatter.Builder().radix(10).scale(5).width(10).offset(0).convert(123.45678);
+        results &= converted.equals("00012345678");
+        converted = new RadixStringFormatter.Builder().radix(10).scale(6).width(10).offset(0).convert(123.45678);
+        results &= converted.equals("00123456780");
+       
+//        assertTrue("Check that my conversion works properly", results);
+        
+        logger.info("Showing the effect of the scale element, effectively moves the radix point");
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(0).width(10).offset(0).debugConvert(123.45678));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(1).width(10).offset(0).debugConvert(123.45678));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(2).width(10).offset(0).debugConvert(123.45678));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(3).width(10).offset(0).debugConvert(123.45678));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(4).width(10).offset(0).debugConvert(123.45678));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(5).width(10).offset(0).debugConvert(123.45678));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(6).width(10).offset(0).debugConvert(123.45678));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(-1).width(10).offset(0).debugConvert(123.45678));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(-2).width(10).offset(0).debugConvert(123.45678));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(-3).width(10).offset(0).debugConvert(123.45678));
+
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(5).width(8).offset(0).debugConvert(123));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(5).width(8).offset(0).debugConvert(123.1));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(5).width(8).offset(0).debugConvert(123.01));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(5).width(8).offset(0).debugConvert(123.001));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(5).width(8).offset(0).debugConvert(123.0001));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(5).width(8).offset(0).debugConvert(123.00001));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(5).width(8).offset(0).debugConvert(123.000001));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(5).width(8).offset(0).debugConvert(123.000004));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(5).width(8).offset(0).debugConvert(123.0000049));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(5).width(8).offset(0).debugConvert(123.000005));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(5).width(8).offset(0).debugConvert(123.000009));
+
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(5).width(8).offset(-100).debugConvert(123.00001));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(5).width(8).offset(-500).debugConvert(123.00001));
+        logger.info(new RadixStringFormatter.Builder().radix(8).scale(5).width(8).offset(0).debugConvert(123.00001));
+        //logger.info(new RadixStringFormatter.Helper().radix(4).scale(5).width(8).offset(0).debugConvert(-1));
+        logger.info(new RadixStringFormatter.Builder().radix(4).scale(5).width(8).offset(0).debugConvert(63.9));
+        logger.info(new RadixStringFormatter.Builder().radix(4).scale(5).width(8).offset(0).debugConvert(63.99));
+        logger.info(new RadixStringFormatter.Builder().radix(4).scale(5).width(8).offset(0).debugConvert(63.9901));
+        logger.info(new RadixStringFormatter.Builder().radix(4).scale(5).width(8).offset(0).debugConvert(63.999));
+        logger.info(new RadixStringFormatter.Builder().radix(4).scale(5).width(8).offset(0).debugConvert(63.9999));
+        logger.info(new RadixStringFormatter.Builder().radix(4).scale(5).width(8).offset(0).debugConvert(63.99999));
+        logger.info(new RadixStringFormatter.Builder().radix(4).scale(5).width(8).offset(0).debugConvert(63.999999));
+ //       logger.info(new RadixStringFormatter.Builder().radix(4).scale(5).width(8).offset(0).debugConvert(123.00001));
+    }
+
     public void convertBackTests() {
         logger.info("Showing the effect of the scale element, effectively moves the radix point");
-        logger.info(new RadixStringFormatter.Helper().radix(10).scale(0).padding(10).offset(0).debugConvertBack("00000000123"));
-        logger.info(new RadixStringFormatter.Helper().radix(10).scale(1).padding(10).offset(0).debugConvertBack("00000001234"));
-        logger.info(new RadixStringFormatter.Helper().radix(10).scale(2).padding(10).offset(0).debugConvertBack("00000012345"));
-        logger.info(new RadixStringFormatter.Helper().radix(10).scale(3).padding(10).offset(0).debugConvertBack("00000123456"));
-        logger.info(new RadixStringFormatter.Helper().radix(10).scale(4).padding(10).offset(0).debugConvertBack("00001234567"));
-        logger.info(new RadixStringFormatter.Helper().radix(10).scale(5).padding(10).offset(0).debugConvertBack("00012345678"));
-        logger.info(new RadixStringFormatter.Helper().radix(10).scale(6).padding(10).offset(0).debugConvertBack("00123456780"));
-        logger.info(new RadixStringFormatter.Helper().radix(10).scale(-1).padding(10).offset(0).debugConvertBack("00000000012"));
-        logger.info(new RadixStringFormatter.Helper().radix(10).scale(-2).padding(10).offset(0).debugConvertBack("00000000001"));
-        logger.info(new RadixStringFormatter.Helper().radix(10).scale(-3).padding(10).offset(0).debugConvertBack("00000000000"));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(0).width(10).offset(0).debugGetInner("00000000123"));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(1).width(10).offset(0).debugGetInner("00000001234"));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(2).width(10).offset(0).debugGetInner("00000012345"));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(3).width(10).offset(0).debugGetInner("00000123456"));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(4).width(10).offset(0).debugGetInner("00001234567"));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(5).width(10).offset(0).debugGetInner("00012345678"));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(6).width(10).offset(0).debugGetInner("00123456780"));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(-1).width(10).offset(0).debugGetInner("00000000012"));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(-2).width(10).offset(0).debugGetInner("00000000001"));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(-3).width(10).offset(0).debugGetInner("00000000000"));
 
         logger.info("Showing the effect of the factor element, effectively moves the radix point");
-        logger.info(new RadixStringFormatter.Helper().radix(10).scale(0).padding(10).offset(0).debugConvertBack("00000000123"));
-        logger.info(new RadixStringFormatter.Helper().radix(10).scale(0).padding(10).offset(0).debugConvertBack("0000000012"));
-        logger.info(new RadixStringFormatter.Helper().radix(10).scale(0).padding(10).offset(0).debugConvertBack("000000001"));
-        logger.info(new RadixStringFormatter.Helper().radix(10).scale(0).padding(10).offset(0).debugConvertBack("00000000"));
-        logger.info(new RadixStringFormatter.Helper().radix(10).scale(0).padding(10).offset(0).debugConvertBack("0000000"));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(0).width(10).offset(0).debugGetInner("00000000123"));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(0).width(10).offset(0).debugGetInner("0000000012"));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(0).width(10).offset(0).debugGetInner("000000001"));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(0).width(10).offset(0).debugGetInner("00000000"));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(0).width(10).offset(0).debugGetInner("0000000"));
 
     }
 
@@ -84,11 +108,64 @@ public class RadixStringFormatterTest {
     public void newTests() {
         boolean results = true;
         logger.info("Trying to debug reverse conversion");
-        Helper h = new RadixStringFormatter.Helper().radix(10).scale(4).padding(6).offset(0);
+        Builder h = new RadixStringFormatter.Builder().radix(10).scale(4).width(7).offset(0);
         logger.info(h.debugConvert(10));
-        logger.info(h.debugConvert(10));
-        logger.info(h.debugConvert(10));
+        logger.info(h.debugGetInner(""));
+        logger.info(h.debugGetOuter(""));
+        logger.info(h.debugGetInner("0"));
+        logger.info(h.debugGetOuter("0"));
+        logger.info(h.debugGetInner("1"));
+        logger.info(h.debugGetOuter("1"));
+        h = h.radix(8);
+        logger.info(h.debugGetInner(""));
+        logger.info(h.debugGetOuter(""));
+        logger.info(h.debugGetInner("0"));
+        logger.info(h.debugGetOuter("0"));
+        logger.info(h.debugGetInner("1"));
+        logger.info(h.debugGetOuter("1"));
+        h = h.radix(2);
+        logger.info(h.debugGetInner(""));
+        logger.info(h.debugGetOuter(""));
+        logger.info(h.debugGetInner("0"));
+        logger.info(h.debugGetOuter("0"));
+        logger.info(h.debugGetInner("1"));
+        logger.info(h.debugGetOuter("1"));
         
+        h = h.radix(4);
+        logger.info(h.debugGetInner("1"));
+        logger.info(h.debugGetInner("11"));
+        logger.info(h.debugGetInner("111"));
+        logger.info(h.debugGetInner("1111"));
+        logger.info(h.debugGetInner("11111"));
+        logger.info(h.debugGetInner("111111"));
+        logger.info(h.debugGetInner("1111111"));
+ 
+        logger.info(h.debugGetOuter("1"));
+        logger.info(h.debugGetOuter("11"));
+        logger.info(h.debugGetOuter("111"));
+        logger.info(h.debugGetOuter("1111"));
+        logger.info(h.debugGetOuter("11111"));
+        logger.info(h.debugGetOuter("111111"));
+        logger.info(h.debugGetOuter("1111111"));
+//        logger.info(h.debugGetOuter("11111111"));
+//        logger.info(h.debugGetOuter("111111111"));
+
+        logger.info(h.debugGetInner("1"));
+        logger.info(h.debugGetInner("10"));
+        logger.info(h.debugGetInner("100"));
+        logger.info(h.debugGetInner("1000"));
+        logger.info(h.debugGetInner("10000"));
+        logger.info(h.debugGetInner("100000"));
+        logger.info(h.debugGetInner("1000000"));
+ 
+        logger.info(h.debugGetOuter("1"));
+        logger.info(h.debugGetOuter("10"));
+        logger.info(h.debugGetOuter("100"));
+        logger.info(h.debugGetOuter("1000"));
+        logger.info(h.debugGetOuter("10000"));
+        logger.info(h.debugGetOuter("100000"));
+        logger.info(h.debugGetOuter("1000000"));
+
 
     }
 
@@ -96,10 +173,10 @@ public class RadixStringFormatterTest {
         boolean results = true;
         for (int i=2;i<=36;i++) {
             System.out.printf("%2da) %12s %12s %12s%n",i,
-                    new RadixStringFormatter.Helper().radix(i).scale(0).padding(10).offset(0).convert(123.45678),
-                    new RadixStringFormatter.Helper().radix(i).scale(1).padding(10).offset(0).convert(123.45678),
-                    new RadixStringFormatter.Helper().radix(i).scale(2).padding(10).offset(0).convert(123.45678),
-                    new RadixStringFormatter.Helper().radix(i).scale(3).padding(10).offset(0).convert(123.45678));
+                    new RadixStringFormatter.Builder().radix(i).scale(0).width(10).offset(0).convert(123.45678),
+                    new RadixStringFormatter.Builder().radix(i).scale(1).width(10).offset(0).convert(123.45678),
+                    new RadixStringFormatter.Builder().radix(i).scale(2).width(10).offset(0).convert(123.45678),
+                    new RadixStringFormatter.Builder().radix(i).scale(3).width(10).offset(0).convert(123.45678));
         }
         assertTrue("Check that my conversion works properly", results);
     }
@@ -109,10 +186,10 @@ public class RadixStringFormatterTest {
         for (int i=2;i<=36;i++) {
             System.out.printf("%2db) %12s %11s %10s%n",
                     i,
-                    new RadixStringFormatter.Helper().radix(i).scale(3).padding(10).offset(0).convert(123.45678),
-                    new RadixStringFormatter.Helper().radix(i).scale(3).padding(10).offset(0).convert(123.45678),
-                    new RadixStringFormatter.Helper().radix(i).scale(3).padding(10).offset(0).convert(123.45678),
-                    new RadixStringFormatter.Helper().radix(i).scale(3).padding(10).offset(0).convert(123.45678));
+                    new RadixStringFormatter.Builder().radix(i).scale(3).width(10).offset(0).convert(123.45678),
+                    new RadixStringFormatter.Builder().radix(i).scale(3).width(10).offset(0).convert(123.45678),
+                    new RadixStringFormatter.Builder().radix(i).scale(3).width(10).offset(0).convert(123.45678),
+                    new RadixStringFormatter.Builder().radix(i).scale(3).width(10).offset(0).convert(123.45678));
         }
         assertTrue("Check that my conversion works properly", results);
     }

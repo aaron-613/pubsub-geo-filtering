@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Geo Search Algo Display</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js" type="text/javascript"></script>
+  
+  <style>
+    p {
+      margin: 0px;
+      font-family: Arial, sans-serif;
+      font-size:90%;
+      color: #00CB95
+    }
+    h2 {
+      margin: 0px;
+      font-family: Arial, sans-serif;
+      //font-size:90%;
+      color: #00CB95
+    }
+  </style>
+</head>
+
+<body style="background-color: #333333">
+<h2>A simple MQTT listner</h2>
+
+<script>
+
+  var unique = ""+(Math.random() + 1).toString(36).substring(2,6);  // 4 "random" [0-9a-z]
+  client = new Paho.MQTT.Client("vmr-mr3e5sq7dacxp.messaging.solace.cloud",Number(20073),unique);
+
+  // set callback handlers
+  client.onConnectionLost = onConnectionLost;
+  client.onMessageArrived = onMessageArrived;
+
+  // connect the client
+  connectOptions = { };
+  connectOptions["useSSL"] = true;
+  connectOptions["userName"] = "solace-cloud-client";
+  connectOptions["password"] = "d5s1ch5arm4lkc2prv5p0oavn7";
+  connectOptions["onSuccess"] = onConnect;
+  writeConsole("Conecting...");
+  client.connect(connectOptions);
+  
+  function writeConsole(message) {
+    var node = document.createElement("p");
+    node.innerHTML = message;
+    document.body.appendChild(node);
+    console.log(message);
+  }
+
+  // called when the client connects
+  function onConnect() {
+    writeConsole("Connected!");
+    client.subscribe("$SYS/client/reply-to");
+    client.subscribe("jpmc/#");
+  }
+
+  // called when the client loses its connection
+  function onConnectionLost(responseObject) {
+    if (responseObject.errorCode !== 0) {
+      writeConsole("onConnectionLost:"+responseObject.errorMessage);
+    }
+  }
+
+  // called when a message arrives
+  function onMessageArrived(message) {
+    writeConsole("Message Arrived: topic='"+message.destinationName+"', payload='"+message.payloadString+"'");
+    if (message.destinationName == "$SYS/client/reply-to") {
+      // solace's cool way of doing unique reply-to topic, or "inbox" topic
+      client.subscribe(message.payloadString);
+      writeConsole("Subscribed to Reply-To topic: '"+message.payloadString+"'");
+    }
+  }
+</script>
+</body>
+</html>

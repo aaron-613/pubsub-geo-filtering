@@ -18,7 +18,7 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.simplify.DouglasPeuckerSimplifier;
 
-import com.solace.aaron.geo.api.RadixRangeSearch2d;
+import com.solace.aaron.geo.api.Geo2dSearch;
 import com.solacesystems.jcsmp.BytesXMLMessage;
 import com.solacesystems.jcsmp.ClientName;
 import com.solacesystems.jcsmp.DeliveryMode;
@@ -44,7 +44,7 @@ public class GeoRoutingSubscriptionManager implements XMLMessageListener {
 
     private static final String REQUEST_TOPIC_V3 = "geo/request/submgr/>";
 
-    private static final int NUM_OF_THREADS = 1;
+    private static final int NUM_OF_THREADS = 3;
     private ExecutorService executorService = Executors.newFixedThreadPool(NUM_OF_THREADS);
     private LinkedBlockingQueue<BytesXMLMessage> requestQueue = new LinkedBlockingQueue<BytesXMLMessage>();
     
@@ -137,7 +137,7 @@ public class GeoRoutingSubscriptionManager implements XMLMessageListener {
         ClientName clientName = JCSMPFactory.onlyInstance().createClientName(origMsg.getSenderId());
         Geometry target = search.target;
 //        Geometry target = WktTests.getOrchard();
-        RadixRangeSearch2d grid = new RadixRangeSearch2d(10,6,7,4,4,100,200,target);  //TODO target is null essentially if doing an 'undo'  
+        Geo2dSearch grid = new Geo2dSearch(10,6,7,4,4,100,200,target);  //TODO target is null essentially if doing an 'undo'  
         List<String> subs = grid.getSubs();
         if (!grid.intersects()) {
             // means that no search area was specified, or something completely outside the earth was.  So add/remove everything!
@@ -198,7 +198,7 @@ public class GeoRoutingSubscriptionManager implements XMLMessageListener {
     
     
     //Create a success reply with a result
-    private BytesXMLMessage createReplyMessage(Search search, RadixRangeSearch2d grid) {
+    private BytesXMLMessage createReplyMessage(Search search, Geo2dSearch grid) {
         BytesXMLMessage replyMessage = JCSMPFactory.onlyInstance().createMessage(BytesXMLMessage.class);
         List<String> subs = grid.getSubs();
         logger.info("A total of "+subs.size()+" subscriptions were generated");

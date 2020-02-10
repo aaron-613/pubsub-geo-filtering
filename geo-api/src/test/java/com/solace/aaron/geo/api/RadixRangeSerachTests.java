@@ -1,9 +1,5 @@
 package com.solace.aaron.geo.api;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import java.util.Arrays;
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
@@ -83,30 +79,35 @@ public class RadixRangeSerachTests {
 */
         Geometry target = factory.createPolygon(coords2);
 
-        RadixRangeSearch2d rrs = new RadixRangeSearch2d(10,7,7,4,4,90,180,target);
+        Geo2dSearch rrs = new Geo2dSearch(10,7,7,4,4,90,180);
 //        com.solace.aaron.rnrf2.RadixRangeSearch2d2 rrs = new RadixRangeSearch2d(2,19,20,12,12,true,true,target);
 //        com.solace.aaron.rnrf2.RadixRangeSearch2d2 rrs = new RadixRangeSearch2d(16,5,5,3,3,true,true,target);
-        for (int i=0;i<20;i++) {
-            System.out.printf("%d) #subs %d, #squares %d, cov%%=%f, |union|=%f%n",
-                    i,rrs.getSubs().size(),rrs.getSquares().size(),rrs.getCurrentCoverageRatio(),rrs.getUnion().getArea());
-            rrs.splitOne();
+//        for (int i=0;i<20;i++) {
+//            System.out.printf("%d) #subs %d, #squares %d, cov%%=%f, |union|=%f%n",
+//                    i,rrs.getSubs().size(),rrs.getSquares().size(),rrs.getCurrentCoverageRatio(),rrs.getUnion().getArea());
+//            rrs.splitOne();
+//        }
+        
+        
+        Geo2dSearchResult result = rrs.splitToRatio(target,0.95,1500);
+        System.out.println(result.getSubs().toString());
+        System.out.println(result.getSubs().size());
+        //System.out.printf("%.4f%%%n",result.getCurrentCoverageRatio()*100);
+        List<List<Double>> squares = result.getSquares();
+        for (List<Double> ar : squares) {
+            System.out.println(ar);
         }
+        System.out.println(result.getUnion().intersects(target));
+        System.out.println(result.getUnion().intersection(target).getArea() / result.getUnion().getArea());
+        System.out.println(result.getUnion());
+
         
         
-        rrs.splitToRatio(0.95,1500);
-        System.out.println(rrs.getSubs().toString());
-        System.out.println(rrs.getSubs().size());
-        System.out.printf("%.4f%%%n",rrs.getCurrentCoverageRatio()*100);
-        List<String[]> squares = rrs.getSquares();
-        for (String[] ar : squares) {
-            System.out.println(Arrays.toString(ar));
-        }
-        System.out.println(rrs.getUnion().intersects(target));
-        System.out.println(rrs.getUnion().intersection(target).getArea() / rrs.getUnion().getArea());
-        System.out.println(rrs.getUnion());
         
-        assertTrue("Check that my conversion works properly", rrs.getSubs().size() > 1);
-        assertEquals("Within range tolerances", rrs.getCurrentCoverageRatio(), rrs.getUnion().intersection(target).getArea() / rrs.getUnion().getArea(), 0.001);
+    System.exit(0);
+
+//        assertTrue("Check that my conversion works properly", result.getSubs().size() > 1);
+//        assertEquals("Within range tolerances", result.getCurrentCoverageRatio(), result.getUnion().intersection(target).getArea() / result.getUnion().getArea(), 0.001);
         
         System.out.println();
         LineString lineString = factory.createLineString(new Coordinate[] {new Coordinate(45,0),new Coordinate(135,0)});
@@ -180,34 +181,30 @@ public class RadixRangeSerachTests {
 
 //        rrs = new RadixRangeSearch2d(2,11,11,-6,-6,1024,1024,target);
 //        rrs = new RadixRangeSearch2d(4,6,6,-3,-3,1024,1024,target);
-        rrs = new RadixRangeSearch2d(6,4,4,-3,-3,1188,1188,target);
+//        rrs = new Geo2dSearch(6,4,4,-3,-3,1188,1188,target);
 //        rrs = new RadixRangeSearch2d(8,4,4,-2,-2,4096,4096,target);
-//        rrs = new RadixRangeSearch2d(10,4,4,-2,-2,1000,1000,target);
+//        rrs = new Geo2dSearch(10,3,3,-2,-2,2000,2000,target);
 //        com.solace.aaron.rnrf2.RadixRangeSearch2d2 rrs = new RadixRangeSearch2d(2,19,20,12,12,true,true,target);
 //        com.solace.aaron.rnrf2.RadixRangeSearch2d2 rrs = new RadixRangeSearch2d(16,5,5,3,3,true,true,target);
-        for (int i=0;i<20;i++) {
-            System.out.printf("%d) #subs %d, #squares %d, cov%%=%f, |union|=%f%n",
-                    i,rrs.getSubs().size(),rrs.getSquares().size(),rrs.getCurrentCoverageRatio(),rrs.getUnion().getArea());
-            rrs.splitOne();
-        }
+//        for (int i=0;i<20;i++) {
+//            System.out.printf("%d) #subs %d, #squares %d, cov%%=%f, |union|=%f%n",
+//                    i,rrs.getSubs().size(),rrs.getSquares().size(),rrs.getCurrentCoverageRatio(),rrs.getUnion().getArea());
+//            rrs.splitOne();
+//        }
         
-        
-        rrs.splitToRatio(0.90,1500);
-        System.out.println(rrs.getSubs().toString());
-        System.out.println(rrs.getSubs().size());
-        System.out.printf("%.4f%%%n",rrs.getCurrentCoverageRatio()*100);
-        squares = rrs.getSquares();
-        for (String[] ar : squares) {
-            System.out.println(Arrays.toString(ar));
-        }
-        System.out.println(rrs.getUnion().intersects(target));
-        System.out.println(rrs.getUnion().intersection(target).getArea() / rrs.getUnion().getArea());
-        System.out.println(rrs.getUnion());
-
-    }
+//        System.out.println(rrs.getSubs().toString());
+//        System.out.println(rrs.getSubs().size());
+//        System.out.printf("%.4f%%%n",rrs.getCurrentCoverageRatio()*100);
+//        squares = rrs.getSquares();
+//        for (List<Double> ar : squares) {
+//            System.out.println(ar);
+//        }
+//        System.out.println(rrs.getUnion().intersects(target));
+//        System.out.println(rrs.getUnion().intersection(target).getArea() / rrs.getUnion().getArea());
+//        System.out.println(rrs.getUnion());
+//
     
     
     
-    
-    
+    }    
 }

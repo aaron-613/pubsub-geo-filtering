@@ -1,0 +1,1286 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Aaron's Next-Gen Geo Solace Demo</title>
+  <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+  <meta charset="utf-8">
+  <style>
+    html,
+    body {
+      height: 100%;
+      margin: 0px;
+      padding: 0px
+    }
+    #map-canvas {
+      //width: 50%;
+      height: 100%;
+      margin: 0px;
+      padding: 0px
+    }
+  </style>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDNwwRkcC7f7ZGlaOzsJdm2_NOO81Wfl48&v=3.exp&libraries=visualization"></script>
+  <script type="text/javascript" src="solclient-debug.js"></script>
+  <script type="text/javascript" src="marker_with_label.js"></script>
+  <style>
+    #wrapper {
+      position: relative;
+    }
+    #over_map_tl {
+      position: absolute;
+      top: 50px;
+      left: 10px;
+      z-index: 99;
+      background-color: rgba(255, 255, 255, 0.95);
+      padding: 10px;
+      border: 1px solid #999;
+      font-family: 'sans-serif';
+      line-height: 30px;
+      padding-left: 10px;
+    }
+    #over_map_tr {
+      position: absolute;
+      top: 10px;
+      right: 50px;
+      z-index: 99;
+      background-color: rgba(255, 255, 255, 0.95);
+      padding: 10px;
+      border: 1px solid #999;
+      font-family: 'sans-serif';
+      line-height: 30px;
+      padding-left: 10px;
+    }
+
+
+    h1 {
+      font: 18pt Roboto, sans-serif;
+      color: #00000;
+      padding: 2px;
+      margin-top: 0px;
+      margin-bottom: 0px;
+    }
+    h3 {
+      font: 12pt Roboto, sans-serif;
+      color: #00000;
+      padding: 2px;
+      margin-top: 0px;
+      margin-bottom: 0px;
+    }
+    p,td {
+      font: 9pt Roboto, sans-serif;
+      color: #000000;
+      padding: 0px;
+      margin-top: 1px;
+      margin-bottom: 1px;
+    }
+
+    .orange_o {
+      color: #f4961c;
+      font: 17pt century gothic;
+    }
+
+    .labels {
+      color: blue;
+      background-color: white;
+      font-family: "Verdana", "Arial", sans-serif;
+      font-size: 10px; //font-weight: bold;
+      text-align: center;
+      width: 100px;
+      border: 1px solid blue; //     white-space: nowrap;
+    }
+
+    .labels3 {
+      //     color: blue;
+      background-color: rgba(255, 255, 255, 0.7);
+      font-family: "Arial", sans-serif;
+      font-size: 14px;
+      font-weight: bold;
+      text-align: center;
+      width: 120px;
+      border: 1px solid black; //     white-space: nowrap;
+    }
+
+    .labels2 {
+      color: rgba(0, 0, 100, 1);
+      background-color: rgba(255, 255, 255, 0.7);
+      font-family: "Arial", sans-serif;
+      font-size: 10px;
+      font-weight: bold;
+      text-align: left;
+      width: 80px;
+      border: 1px solid rgba(0, 0, 100, 1);
+      padding-left: 1px; //     white-space: nowrap;
+    }
+
+
+
+    .sliders {
+      font: 16pt Haettenschweiler, Impact, fantasy;
+      color: #003b74; //005dab;
+    }
+    .newSliders {
+      font: 9pt Roboto, sans-serif;
+      color: #000000;
+    }
+  </style>
+  <script>
+    // This example adds a user-editable rectangle to the map.
+
+    var map;
+    var heatmap;
+    var searchShapes = {"poly":[],"circle":[],"rect":[]};  // used to be just poly and circle
+    var dragging = false;  // ignore the set_at events from the shapes when they're being dragged
+    var poly;
+    var circle;
+    //var oldRequestStr = "ALL";
+    var oldRequestObj = {};
+    var boundary;
+    var subs2;
+    var subLabel;
+    var accuracy = 0.9;
+    var numSubs = 300;
+    var radix = 10;
+    var lastResults = "";
+    var zoomLevel;
+    var globalZindex = 100;
+    var heatToggle = false;
+    var MAX_TOPICS = 2010;
+
+    var vehicles = {};  // loc,
+
+    var directionsDisplay;
+    var directionsService = new google.maps.DirectionsService();
+
+    var iconImageRed = {
+      url: "marker-blue_car-dark-red_bg-light-pink.png",
+      anchor: {
+        x: 21,
+        y: 60
+      }
+    };
+    var iconImage2 = {
+      url: "marker-blue_car-black_bg-white.png",
+      anchor: { x: 21, y: 60 }
+    };
+    var icon_dot = {
+      url: "dot.png",
+      anchor: { x: 7, y: 7 }
+    };
+
+    var icon_bus_small_ok = { url: "bus_small_ok.png", anchor: { x: 4, y: 4 }};
+    var icon_bus_small_stop = { url: "bus_small_stop.png", anchor: { x: 4, y: 4 }};
+    var icon_bus_small_msg = { url: "bus_small_msg.png", anchor: { x: 8, y: 8 }};
+    var icon_bus_small_fault = { url: "bus_small_fault.png", anchor: { x: 8, y: 8 }};
+    var icon_bus_med_ok = { url: "bus_med_ok.png", anchor: { x: 8, y: 8 }};
+    var icon_bus_med_stop = { url: "bus_med_stop.png", anchor: { x: 8, y: 8 }};
+    var icon_bus_med_msg = { url: "bus_med_msg.png", anchor: { x: 16, y: 16 }};
+    var icon_bus_med_fault = { url: "bus_med_fault.png", anchor: { x: 16, y: 16 }};
+
+
+    function initialize() {
+      var mapOptions = {
+        center: new google.maps.LatLng(1.3, 103.85), // Singapore
+        zoom: 13, // demo
+        draggable: true,
+        mapTypeId: 'satellite',
+        mapTypeControlOptions: {
+          mapTypeIds: ['coordinate', 'roadmap'],
+          style: google.maps.MapTypeControlStyle.DROPDOWN_MENU
+        },
+        scaleControl: true,
+        drawable: true,
+        clickable: false,
+        mapTypeControlOptions: {
+          //mapTypeIds: [google.maps.MapTypeId.ROADMAP, 'map_style']
+        }
+
+      };
+      directionsDisplay = new google.maps.DirectionsRenderer();
+      map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+      //map.mapTypes.set('map_style', styledMap);
+      map.setMapTypeId('terrain');
+
+      //map.setMapTypeId('map_style');
+      directionsDisplay.setMap(map);
+
+
+      // Construct a draggable red polygon
+
+
+      boundary = [];
+      for (var i = 0; i < 2; i++) { // there's two because there are two shapes... need to change
+        boundary[i] = new google.maps.Polygon({
+          map: map,
+          strokeColor: '#0000FF',
+          strokeOpacity: 0.8,
+          strokeWeight: 1,
+          fillColor: '#0000FF',
+          fillOpacity: 0.05,
+          map: map,
+          zIndex: 10,
+          clickable: true,
+          draggable: false,
+          editable: false,
+        });
+      }
+
+      subs2 = [];
+      var color = '#0000ff';
+      var factor = 2;
+      for (var i = 0; i < MAX_TOPICS; i++) {
+        subs2[i] = new google.maps.Rectangle({
+          title: "Hello there " + i,
+          strokeColor: color,
+          strokeOpacity: 1.0 - (factor * 0.15),
+          strokeWeight: 1.2 - (factor * 0.2),
+          fillColor: color,
+          fillOpacity: 0.05,
+          zIndex: factor,
+          clickable: true,
+        });
+      }
+      // this is for the coordinate label that hovers
+      //subLabel = new MarkerWithLabel({
+      //   position: new google.maps.LatLng(0, 0),
+      //   draggable: false,
+      //   raiseOnDrag: false,
+      //   map: map,
+      //   labelContent: "blah",
+      //   labelAnchor: new google.maps.Point(30, 20),
+      //   labelClass: "labels", // the CSS class for the label
+      //   labelStyle: {
+      //     opacity: 1.0
+      //   },
+      //   icon: "http://placehold.it/1x1",
+      //   visible: false
+      // });
+
+      // https://maps.googleapis.com/maps/api/streetview?size=300x200&location=51.614260,-0.060660&heading=300&pitch=0&fov=100
+
+
+
+      //////////////////////////////////////////////////////////
+
+
+      zoomLevel = map.getZoom();
+      google.maps.event.addListener(map, 'zoom_changed', function() {
+        console.log("Zoom changed!!  from " + zoomLevel + " to " + map.getZoom());
+        if (heatmap.getMap() && map.getZoom() < 13) heatmap.setMap(null);
+        if (zoomLevel >= 13 && map.getZoom() <= 12 ||
+            zoomLevel <= 12 && map.getZoom() >= 13) { // crossing a threshold
+          for (key in vehicles) {
+            var vehicle = vehicles[key];
+            if (vehicle["type"] == "bus") {
+              setBusIcon(key);
+            }
+          }
+          console.log("done!");
+        }
+        zoomLevel = map.getZoom();
+      });
+
+      // this kicks off the heatmap to auto-refresh every 5 seconds
+      heatmap = new google.maps.visualization.HeatmapLayer({
+        // radius: 0.005,
+        radius: 0.003,
+        dissipating: false,
+      });
+      setInterval(function() {
+        var points = [];
+        for (var key in vehicles) {
+          if (vehicles[key]["marker"].getMap() != null) points.push(vehicles[key]["pos"]);
+        }
+        heatmap.setData(points);
+      }, 5000);
+    }
+    /////////// END OF MAP INITIALIZE method ////////////////////////////////////////
+
+    function getRandomPoint() {
+      // 1.333691, 103.828080   -- central Singapore
+      var rLat = (Math.random() * 0.05) + 1.27;
+      var rLng = (Math.random() * 0.1) + 103.8;
+      // console.log(map.getBounds());//.lat+ "   -   "+map.getCenter().lon);
+      // var rLat = (Math.random() * 0.05) + map.getCenter().lat;
+      // var rLng = (Math.random() * 0.1) + map.getCenter().lng;
+      return new google.maps.LatLng(rLat,rLng);  // a random point, somewhere centralish
+    }
+
+    function getPointNearPoint(point) {
+      var angle = Math.random() * 2 * Math.PI;
+      var dist = Math.random() * 0.05;
+      return new google.maps.LatLng(point.lat() + (Math.cos(angle) * dist), point.lng() + (Math.sin(angle) * dist));
+    }
+
+    function addNewPoly() {
+      var p1 = getRandomPoint();
+      var p2 = getPointNearPoint(p1);
+      var latDist = p1.lat()-p2.lat();
+      var lngDist = p1.lng()-p2.lng();
+      var mid = new google.maps.LatLng((p1.lat()+p2.lat())/2,(p1.lng()+p2.lng())/2);
+      var p3 = new google.maps.LatLng(((p1.lat()+p2.lat())/2) + lngDist,((p1.lng()+p2.lng())/2) - latDist);
+      var coords = [p1,p3,p2];
+      if (Math.random() < 0.5) coords.push(new google.maps.LatLng(((p1.lat()+p2.lat())/2) - lngDist,((p1.lng()+p2.lng())/2) + latDist));
+      var poly = new google.maps.Polygon({
+        map: map,
+        paths: coords,
+        strokeColor: '#FF0000',
+        strokeOpacity: 0.7,
+        strokeWeight: 3,
+        fillColor: '#FF0000',
+        fillOpacity: 0.025,
+        visible: true,
+        draggable: true,
+        clickable: true,
+        editable: true,
+        geodesic: false,
+        zIndex: 200000,
+      });
+      searchShapes["poly"].push(poly);
+      google.maps.event.addListener(poly.getPath(), 'set_at', updateSearch);
+      google.maps.event.addListener(poly.getPath(), 'insert_at', updateSearch);
+      google.maps.event.addListener(poly.getPath(), 'remove_at', updateSearch);
+      google.maps.event.addListener(poly, 'dragstart', startDrag);
+      google.maps.event.addListener(poly, 'dragend', endDrag);
+    }
+
+    function startDrag() { console.log("DRAGGGIN!!!!"); dragging = true; }
+    function endDrag() { console.log("NO MORE DRAGGGIN!!!!"); dragging = false; updateSearch(); }
+
+
+    function addNewCircle() {
+      var circle = new google.maps.Circle({
+        map: map,
+        center: getRandomPoint(),
+        radius: 500 + (Math.random() * 2000),
+        strokeColor: '#FF0099',
+        strokeOpacity: 0.7,
+        fillColor: '#FF0099',
+        fillOpacity: 0.025,
+        draggable: true,
+        clickable: true,
+        editable: true,
+        visible: true,
+        zIndex: 199999,
+      });
+      searchShapes["circle"].push(circle);
+      google.maps.event.addListener(circle, 'radius_changed', updateSearch);
+      google.maps.event.addListener(circle, 'center_changed', updateSearch);
+      google.maps.event.addListener(circle, 'dragstart', startDrag);
+      google.maps.event.addListener(circle, 'dragend', endDrag);
+    }
+
+    function addNewRect() {
+      var p1 = getRandomPoint();
+      var p2 = getPointNearPoint(p1);
+      var rect = new google.maps.Rectangle({
+        map: map,
+        // bounds: new google.maps.LatLngBounds(p1,p2),
+        bounds: {
+          north: Math.max(p1.lat(),p2.lat()),
+          south: Math.min(p1.lat(),p2.lat()),
+          east:  Math.max(p1.lng(),p2.lng()),
+          west:  Math.min(p1.lng(),p2.lng()),
+        },
+        strokeColor: '#FF6600',
+        strokeOpacity: 0.7,
+        strokeWeight: 3,
+        fillColor: '#FF6600',
+        fillOpacity: 0.025,
+        visible: true,
+        draggable: true,
+        clickable: true,
+        editable: true,
+        zIndex: 199998,
+      });
+      searchShapes["rect"].push(rect);
+      google.maps.event.addListener(rect, 'bounds_changed', updateSearch);
+      google.maps.event.addListener(rect, 'dragstart', startDrag);
+      google.maps.event.addListener(rect, 'dragend', endDrag);
+    }
+
+    function clearAllShapes() {
+      for (key in searchShapes) {
+        for (var i in searchShapes[key]) {
+          searchShapes[key][i].setMap(null);
+        }
+      }
+      searchShapes = {"poly":[],"circle":[],"rect":[]};
+      updateSearch();
+    }
+
+    function getClass(obj) {
+      if (obj instanceof google.maps.Rectangle) return "rect";
+      else if (obj instanceof google.maps.Polygon) return "poly";
+      else if (obj instanceof google.maps.Circle) return "circle";
+      else return "Unknown";
+    }
+
+    function getColorForShape(what) {
+      //http://bonsaiden.github.io/JavaScript-Garden/#types
+      // Object.prototype.toString.call(obj).slice(8, -1);
+      if (what == "rect") return '#FF6600';
+      else if (what == "circle") return '#FF0099';
+      else if (what == "poly") return '#FF0000';
+      else return '#000000';
+    }
+
+    function setWorking(busy) {
+      if (busy) {
+        for (key in searchShapes) {
+          for (var i in searchShapes[key]) {
+            searchShapes[key][i].setOptions({
+              strokeColor: '#aaaaaa',
+              editable: false,
+              draggable: false,
+          });
+        }
+      }
+        // should disable the user inputs as well
+        // document.querySelector('#display').disabled = true;
+        // document.querySelector('#addRectButton').disabled = true;
+        // document.querySelector('#addCirleButton').disabled = true;
+        // document.querySelector('#fader').disabled = true;
+        // document.querySelector('#fader2').disabled = true;
+      } else {
+        // for (var i in searchShapes) {
+        //   searchShapes[i].setOptions({
+        //     strokeColor: getColorForShape(searchShapes[i]),
+        //     editable: true,
+        //     draggable: true,
+        //   });
+        //   console.log( getColorForShape(searchShapes[i]));
+        // }
+        for (key in searchShapes) {
+          for (var i in searchShapes[key]) {
+            searchShapes[key][i].setOptions({
+              strokeColor: getColorForShape(key),
+              editable: true,
+              draggable: true,
+            });
+          }
+        }
+
+        // document.querySelector('#display').disabled = false;
+        // document.querySelector('#polyBox').disabled = false;
+        // document.querySelector('#circleBox').disabled = false;
+        // document.querySelector('#fader').disabled = false;
+        // document.querySelector('#fader2').disabled = false;
+      }
+      //working = busy;
+    }
+
+    // called when something changes (shape boundary, slider value) to kick off a search
+    function updateSearch() {
+      if (dragging) return;
+      onPolyChange();
+    }
+
+    function getShapeCoords() {
+      var searchObjects = {};
+      var polys = [];
+      var circles = [];
+      for (key in searchShapes) {
+        for (i in searchShapes[key]) {
+          if (key == "poly") {
+            polys.push(getPolyCoords(searchShapes[key][i]));
+          } else if (key == "rect") {
+            polys.push(getRectCoords(searchShapes[key][i]));
+          } else {
+            circles.push(getCircleCoords(searchShapes[key][i]));
+          }
+        }
+      }
+      if (polys.length != 0) searchObjects["polys"] = polys;
+      if (circles.length != 0) searchObjects["circles"] = circles;
+      return searchObjects;
+    }
+
+
+    function getRectCoords(rect) {
+      var vertices = rect.getBounds();
+      var ne = vertices.getNorthEast();
+      var sw = vertices.getSouthWest();
+      var coords = [];
+      coords.push([ne.lat(),ne.lng()]);
+      coords.push([ne.lat(),sw.lng()]);
+      coords.push([sw.lat(),sw.lng()]);
+      coords.push([sw.lat(),ne.lng()]);
+      var rectObj = { "coords":coords};
+      // console.log("This is what I send to the subscription manager: RECT='"+JSON.stringify(rectObj)+"'");
+      return rectObj;
+    }
+
+
+    function getPolyCoords(poly) {
+      var vertices = poly.getPath();
+      var coords = [];
+      for (var i = 0; i < vertices.getLength(); i++) {
+        var xy = vertices.getAt(i);
+        coords.push([xy.lat().toFixed(7)*1,xy.lng().toFixed(7)*1]);
+      }
+      var polyObj = {"coords":coords};
+      // console.log("This is what I send to the subscription manager: POLY='"+JSON.stringify(polyObj)+"'");
+      return polyObj;
+    }
+
+    function getCircleCoords(circle) {
+      var xy = circle.getCenter();
+      var circleObj = {};
+      circleObj["coords"] = [xy.lat().toFixed(7)*1,xy.lng().toFixed(7)*1];
+      // convert meters to lat/lon: https://stackoverflow.com/questions/8586635/convert-meters-to-latitude-longitude-from-any-point
+      circleObj["radius"] = circle.getRadius().toFixed(1)*1;
+      circleObj["modifier"] = "metresToLatLon"
+      // console.log("This is what I send to the subscription manager: CIRCLE='"+JSON.stringify(circleObj)+"'");
+      return circleObj;
+    }
+
+    function updateSubs(newSubCoords) {
+      //subCoordsText = newSubCoords;
+      var coords = newSubCoords.split("|");
+      var numNewCoords = coords.length - 1;
+      lastResults = coords[0];
+      for (var i = 1; i <= numNewCoords; i++) {
+        var pairs = coords[i].split(";");
+        var innerLat = pairs[0].split(",")[0];
+        var innerLon = pairs[0].split(",")[1];
+        var outerLat = pairs[1].split(",")[0];
+        var outerLon = pairs[1].split(",")[1]
+        subs2[i].setBounds(new google.maps.LatLngBounds(
+          new google.maps.LatLng(innerLat, innerLon),
+          new google.maps.LatLng(outerLat, outerLon)));
+        subs2[i].setMap(map);
+        // google.maps.event.addListener(subs2[i], "mousemove", function(event) {
+        //   var lat = event.latLng.lat();
+        //   var lon = event.latLng.lng();
+        //   var roundLat;
+        //   if (lat > 0) roundLat = Math.floor(lat * 10000) / 10000;
+        //   else roundLat = Math.ceil(lat * 10000) / 10000;
+        //   var roundLon;
+        //   if (lon > 0) roundLon = Math.floor(lon * 10000) / 10000;
+        //   else roundLon = Math.ceil(lon * 10000) / 10000;
+        //   subLabel.set("labelContent", "" + roundLat.toFixed(4) + ", " + roundLon.toFixed(4));
+        //   subLabel.setPosition(event.latLng);
+        //   subLabel.setVisible(true);
+        // });
+        // google.maps.event.addListener(subs2[i], "mouseout", function(event) {
+        //   subLabel.setVisible(false);
+        // });
+      }
+      setWorking(false); // done
+      console.log(lastResults);
+    }
+
+    function updateSubsBoundary(newSubCoords) {
+      //subCoordsText = newSubCoords;
+      var coords = newSubCoords.split("|");
+      lastResults = coords[0];
+      for (var i = 1; i < coords.length; i++) {
+        var pairs = coords[i].split(";");
+        var boundaryCoords = [];
+        for (var j = 0; j < pairs.length; j++) {
+          var latlon = pairs[j].split(",");
+          boundaryCoords.push(new google.maps.LatLng(latlon[0], latlon[1]));
+        }
+        boundary[i - 1].setPath(boundaryCoords);
+        boundary[i - 1].setMap(map);
+        // google.maps.event.addListener(boundary[i - 1], "mousemove", function(event) {
+        //   var lat = event.latLng.lat();
+        //   var lon = event.latLng.lng();
+        //   var roundLat;
+        //   if (lat > 0) roundLat = Math.floor(lat * 10000) / 10000;
+        //   else roundLat = Math.ceil(lat * 10000) / 10000;
+        //   var roundLon;
+        //   if (lon > 0) roundLon = Math.floor(lon * 10000) / 10000;
+        //   else roundLon = Math.ceil(lon * 10000) / 10000;
+        //   subLabel.set("labelContent", "" + roundLat.toFixed(4) + ", " + roundLon.toFixed(4));
+        //   subLabel.setPosition(event.latLng);
+        //   subLabel.setVisible(true);
+        // });
+        // google.maps.event.addListener(boundary[i - 1], "mouseout", function(event) {
+        //   subLabel.setVisible(false);
+        // });
+      }
+      setWorking(false);
+      console.log(lastResults);
+    }
+
+
+
+    google.maps.event.addDomListener(window, 'load', initialize);
+
+
+
+
+    // solace code //////////////////////////////////////////////////////////////////////////////
+
+    var OPERATION_TIMEOUT = 30000;
+    var REQUEST_TIMEOUT = 10000;
+    var ns = this;
+    /**
+     * Data members in the global scope
+     */
+    var mySessionProperties = null;
+    var mySession = null;
+    var myNickName = "AAron is awesome";
+    var requestTopic = 'request/geo_filter';
+    var connected = false;
+    var working = false;
+
+    var sessionEventCb; // forward declaration
+    var messageEventCb; // forward declaration
+
+    var replyReceivedCb; // forward declaration
+    var replyFailedCb; // forward declaration
+
+    /**
+     * Creates a message to with queryType as message's binary attachment
+     * @param queryType
+     * @return {solace.Message} message
+     */
+    this.createRequestMsg = function(polyCoordStr) {
+      var msg = solace.SolclientFactory.createMessage();
+      // Set the topic to requestTopic
+      msg.setDestination(solace.SolclientFactory.createTopic(requestTopic));
+      // Set delivery mode
+      msg.setDeliveryMode(solace.MessageDeliveryModeType.DIRECT);
+      // Set binary attachment
+      msg.setBinaryAttachment(polyCoordStr);
+      return msg;
+    };
+
+    var aa_name;
+
+    /**
+     * Invoked when the Ok button is clicked on the login dialog. This method will trigger the creation and connect()
+     * operation on the session. When successfully connected, handle_sessionConnected() is invoked
+     */
+    this.onLogin = function() {
+      // log to console
+      //        var msg = "Creating Session: [ url='" + ns.utils_getUrl() + "', " +
+      //                "user='" + ns.utils_getUserName() + ", vpn='" + ns.utils_getVPN() + "']";
+      //      console.log(msg);
+      // create the session
+      try {
+        // Create Session
+        mySessionProperties = new solace.SessionProperties();
+        mySessionProperties.connectTimeoutInMsecs = OPERATION_TIMEOUT;
+        mySessionProperties.readTimeoutInMsecs = OPERATION_TIMEOUT;
+        mySessionProperties.keepAliveIntervalsLimit = 10;
+        mySessionProperties.userName = "aaron";
+        //mySessionProperties.userName = "solace-cloud-client";
+        mySessionProperties.password = "password";
+        //mySessionProperties.password = "rmvja6sdbt7p2jsn2qmc8a6lea";
+        //mySessionProperties.vpnName = "msgvpn-akw25dxfb";
+        mySessionProperties.vpnName = "aaron";
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        //mySessionProperties.url = "http://192.168.56.101";
+//        mySessionProperties.url = "http://54.255.230.239";
+        mySessionProperties.url = "http://london.solace.com:8080";
+        //mySessionProperties.url = "ws://mr-cfitsqc51.messaging.datago.io:20227";
+        //mySessionProperties.url = "ws://mr-akw23ieg1.messaging.solace.cloud:20803";  // aron's new SC service
+
+        mySessionProperties.includeSenderId = true;
+        //            myNickName = mySessionProperties.clientName = ns.utils_getNickName();
+
+        mySession = solace.SolclientFactory.createSession(mySessionProperties,
+          new solace.MessageRxCBInfo(function(session, message) {
+            messageEventCb(session, message);
+          }, this),
+          new solace.SessionEventCBInfo(function(session, event) {
+            sessionEventCb(session, event);
+          }, this));
+        console.log("Session was successfully created.");
+        // Connect it
+        mySession.connect();
+        setInterval(function() {
+          for (var key in vehicles) {
+            var delta = Date.now() - vehicles[key]["ts"];
+            if (delta > 11000) {
+              vehicles[key]["marker"].setMap(null);
+            } else if (delta > 9000) {
+              vehicles[key]["marker"].setOpacity(0.33);
+            } else if (delta > 7000) {
+              vehicles[key]["marker"].setOpacity(0.66);
+            }
+          }
+        }, 1000);
+
+      } catch (error) {
+        console.log("Could not login!");
+        console.log(error.toString());
+        if (mySession !== null) {
+          mySession.dispose();
+          mySession = null;
+          connected = false;
+        }
+      }
+      lastMsgCount = 0;
+      discardCount = 0;
+      //setTimeout(function(){ alert("Click 'Remove all shapes' to start the bus demo."); },3000);
+      setTimeout(clearAllShapes,2000);
+      setInterval(function() {
+        if (!connected) return;
+        var curMsgs = mySession.getStat(solace.StatType.RX_TOTAL_DATA_MSGS);
+        var delta = (curMsgs - lastMsgCount);// * 2 + (lastMsgCount % 2);
+        lastMsgCount = curMsgs;
+        discardCount = mySession.getStat(solace.StatType.RX_DISCARD_MSG_INDICATION);
+        console.log("Message rate: "+delta+",  Discard count: "+discardCount);
+      }, 60000);  // once a minute
+    };
+
+    this.getGeoSearchParams = function() {
+      var params = {};
+      params["accuracy"] = accuracy;
+      params["numSubs"] = numSubs;
+      params["radix"] = document.querySelector('#radix').value * 1;
+      var show = document.querySelector('#show').value;  // buses or taxis or both
+      var vehNum = document.querySelector('#vehNum').value;
+      var routeNum = document.querySelector('#routeNum').value
+      var prefix = "geo/";
+      var suffix = "/";
+      if (show == "taxi") prefix += "taxi/";
+      else if (show == "buses") prefix += "bus/";
+      else prefix += "*/";
+      if (vehNum == "") prefix += "*/";
+      else prefix += vehNum + "/";
+      params["topicPrefix"] = prefix;
+      if (routeNum == "") suffix += ">";
+      else {
+        if (routeNum < 100) suffix += "0";
+        if (routeNum < 10) suffix += "0";
+        suffix += routeNum + "/>";
+      }
+      params["topicSuffix"] = suffix;
+      console.log(prefix+"  -  "+suffix);
+      return params;
+      // var paramStr = "accuracy=" + accuracy + ";";
+      // paramStr += "numSubs=" + numSubs + ";";
+      // // don't worry about this anymore... return both
+      // paramStr += "display=" + document.querySelector('#display').value + ";";
+      // return paramStr;
+    }
+
+    this.onPolyChange = function() {
+      if (!connected) return;
+      if (working) return;
+      setWorking(true);
+      for (var i = 0; i < MAX_TOPICS; i++) {
+        subs2[i].setMap(null);
+      }
+      // currently, the subscription manager expects two sets of search requests, separated by |
+      // the first is the new search, the 2nd is the previous one (so that it can undo/remove subscriptions for that)
+      try {
+        var requestObj = {};
+        requestObj["shapes"] = getShapeCoords();
+        Object.assign(requestObj,getGeoSearchParams());
+        if (JSON.stringify(requestObj) == JSON.stringify(oldRequestObj)) {
+          console.log("exact same search, not doing anything");
+          setWorking(false);
+          return;
+        }
+        for (var i = 0; i < 2; i++) {
+          boundary[i].setMap(null);
+        }
+        var prevRequestObj = oldRequestObj; // take a copy of what was asked for previously
+        oldRequestObj = requestObj; // copy the new request for the record
+        var newRequestObj = {}
+        Object.assign(newRequestObj,requestObj);
+        newRequestObj["previous"] = prevRequestObj;
+        console.log("Request string: "+JSON.stringify(newRequestObj));
+        var msg = ns.createRequestMsg(JSON.stringify(newRequestObj));
+        mySession.sendRequest(msg, REQUEST_TIMEOUT, function(session, message) {
+          replyReceivedCb(session, message);
+        }, function(session, event) {
+          replyFailedCb(session, event);
+        }, null);
+        // if (oldRequestStr == "ALL") { // don't wait for a response from the sub mgr
+        //   setWorking(false);
+        // }
+      } catch (error) {
+        console.log("Failed to send polygon subscription request - logging out!");
+        console.log(error.toString());
+        if (mySession !== null) {
+          mySession.dispose();
+          mySession = null;
+          connected = false;
+        }
+      }
+    };
+
+    /**
+     * The session was successfully connected, the next step is to add the 'rendez-vous' topic subscription
+     */
+    this.handle_sessionConnected = function() {
+      connected = true;
+      //        onPolyChange();
+      try {
+        //mySession.subscribe(solace.SolclientFactory.createTopic("geo/*/*/>"), false, this, OPERATION_TIMEOUT);
+        mySession.subscribe(solace.SolclientFactory.createTopic("comms/>"), false, this, OPERATION_TIMEOUT);
+        mySession.subscribe(solace.SolclientFactory.createTopic("ctrl/>"), true, this, OPERATION_TIMEOUT);
+      } catch (error) {
+        console.log("Failed to add topic subscription. Disconnecting!");
+        console.log(error.toString());
+        if (mySession !== null) {
+          mySession.dispose();
+          mySession = null;
+        }
+      }
+    };
+
+    /**
+     * The subscription was successfully added, the next step is to send a 'I am logged in' message
+     */
+    this.handle_subscriptionOperationSucceeded = function() {
+      console.log("subscription added");
+    };
+
+    /**
+     * General failure
+     * @param text
+     * @param updateContent
+     */
+    this.handle_failure = function(text, updateContent) {
+      console.log(text);
+      //        ns.cleanup();
+    };
+
+    /**
+     * General cleanup
+     */
+    this.cleanup = function() {
+      if (mySession !== null) {
+        mySession.dispose();
+        mySession = null;
+        connected = false;
+      }
+    };
+
+    ////////////////////// Callback functions //////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Session event callback
+     * @param session
+     * @param event
+     */
+    sessionEventCb = function(session, event) {
+      console.log(event.toString());
+      if (event.sessionEventCode === solace.SessionEventCode.UP_NOTICE) {
+        ns.handle_sessionConnected();
+      } else if (event.sessionEventCode === solace.SessionEventCode.SUBSCRIPTION_OK) {
+        ns.handle_subscriptionOperationSucceeded();
+      } else if (event.sessionEventCode === solace.SessionEventCode.SUBSCRIPTION_ERROR) {
+        ns.handle_failure("Failed to add subscription", true);
+      } else if (event.sessionEventCode === solace.SessionEventCode.LOGIN_FAILURE) {
+        ns.handle_failure("Failed to login to appliance:" + event.infoStr, true);
+      } else if (event.sessionEventCode === solace.SessionEventCode.CONNECTING) {
+        console.log("Connecting...");
+      } else if (event.sessionEventCode === solace.SessionEventCode.DISCONNECTED) {
+        ns.handle_failure("Session is disconnected", false);
+      } else {
+        ns.handle_failure("Session failure!", false);
+      }
+    };
+
+    /**
+     * Direct message receive callback
+     * @param session
+     * @param message
+     */
+
+
+    messageEventCb = function(session, message) {
+      try {
+        var topic = message.getDestination().getName();
+        if (topic.indexOf("geo/") == 0) {
+          parseGeoMessage(message);
+        } else if (topic.indexOf("comms/") == 0) {
+          parseCommsMessage(message);
+          // do something
+        } else if (topic.indexOf("ctrl/") == 0) {
+          // could be heatmap!
+          parseCtrlMessage(message);
+        } else {
+          console.log("Received unkonwn message on topic: " + topic);
+        }
+      } catch (e) {
+        console.log(message);
+        console.log(e);
+        throw e;
+      }
+
+    }
+
+    getTextPayload = function(message) {
+      if (message.getType() == solace.MessageType.TEXT) {
+        return message.getSdtContainer().getValue();
+      } else {
+        return message.getBinaryAttachment(); // binary attachment, all text
+      }
+    }
+
+    parseCtrlMessage = function(message) {
+      var levels = message.getDestination().getName().split("/"); // topic levels   geo/bus/1001/001.308820/0103.876270/007/OK  --> geo/bus/VehNum/lat/lon/Route/Status
+      if (levels[1] == "bus") {
+        var vehicle = vehicles[levels[2]];
+        if (vehicle == null) {
+          alert("No vehicle "+levels[2]+" present.");
+          return;
+        }
+        var messageWindow = new google.maps.InfoWindow();
+        messageWindow.setContent("Bus #"+levels[2]+" has reported status: "+levels[3]);
+        console.log(message.getBinaryAttachment());
+
+        messageWindow.open(map,vehicle["marker"]);
+        google.maps.event.addListener(messageWindow, 'closeclick', function() {
+          vehicle["marker"].setAnimation(google.maps.Animation.NONE);
+        });
+        vehicle["marker"].setIcon(icon_bus_med_msg);
+        vehicle["marker"].setAnimation(google.maps.Animation.BOUNCE);
+        vehicle["marker"].setZIndex(globalZindex+100);  // pop to top
+      } else if (levels[1] == "route") {
+        for (var i=1000;i<10000;i++) { //var key in vehicles) {
+          if (vehicles[i] != null && vehicles[i]["route"] == levels[2]) {
+            vehicles[i]["marker"].setIcon(icon_bus_med_msg);
+            vehicles[i]["marker"].setZIndex(globalZindex++);  // pop to top
+          }
+        }
+      }
+    }
+
+    parseCommsMessage = function(message) {
+      var levels = message.getDestination().getName().split("/"); // topic levels   geo/bus/1001/001.308820/0103.876270/007/OK  --> geo/bus/VehNum/lat/lon/Route/Status
+      // comms/bus/1234
+      // comms/route/012
+      // comms/broadcast
+      // comms/dispatch
+      if (levels[1] == "bus") {
+        var vehicle = vehicles[levels[2]];
+        if (vehicle == null) {
+          alert("No vehicle "+levels[2]+" present.");
+          return;
+        }
+        var messageWindow = new google.maps.InfoWindow();
+        messageWindow.setContent(message.getBinaryAttachment());
+        messageWindow.open(map,vehicle["marker"]);
+        google.maps.event.addListener(messageWindow, 'closeclick', function() {
+          vehicle["marker"].setAnimation(google.maps.Animation.NONE);
+        });
+        vehicle["marker"].setIcon(icon_bus_med_msg);
+        vehicle["marker"].setAnimation(google.maps.Animation.BOUNCE);
+        vehicle["marker"].setZIndex(globalZindex+100);  // pop to top
+      } else if (levels[1] == "route") {
+        for (var i=1000;i<10000;i++) { //var key in vehicles) {
+          if (vehicles[i] != null && vehicles[i]["route"] == levels[2]) {
+            vehicles[i]["marker"].setIcon(icon_bus_med_msg);
+            vehicles[i]["marker"].setZIndex(globalZindex++);  // pop to top
+            vehicles[i]["marker"].setAnimation(google.maps.Animation.BOUNCE);
+          }
+        }
+      } else if (levels[1] == "broadcast") {
+        for (var i=1000;i<10000;i++) { //var key in vehicles) {
+          if (vehicles[i] != null) {
+            vehicles[i]["marker"].setIcon(icon_bus_med_msg);
+            vehicles[i]["marker"].setZIndex(globalZindex++);  // pop to top
+            vehicles[i]["marker"].setAnimation(google.maps.Animation.BOUNCE);
+          }
+        }
+      } else if (levels[1] == "dispatch") {
+        console.log(message.payload);
+        alert(getTextPayload(message));
+      }
+    }
+
+    buildBusInfoWindowContent = function(vehNum) {
+      var contentString = '<div id="content">';
+      if (vehNum >= 1000 && vehNum < 10000) {   // bus
+        var bus = vehicles[vehNum];
+        contentString = '<h2 id="firstHeading" class="firstHeading">Route '+bus["route"]+'</h2>' +
+          '<div id="bodyContent"><p>' +
+          '<b>Bus Number:</b> ' + vehNum + '<br/>' +
+          '<b>Current Position:</b> ' + bus["marker"].getPosition().lat().toFixed(4) + 'N,' + bus["marker"].getPosition().lng().toFixed(4) + 'E<br/>' +
+          '<b>Status:</b> ' + bus["payload"].status + '<br/>' +
+          '<b>Speed:</b> ' + bus["payload"].speed +
+          // '<b>Destination:</b> ' + endAddr +
+          '</p>';
+        // if (img != null) {
+        //   contentString += '<p align="center"><img src="' + img + '"></p>';
+        // }
+        contentString += '</div></div>';
+        return contentString;
+      }
+
+    }
+
+    setBusIcon = function(vehNum) {
+      var status = vehicles[vehNum]["payload"].status;
+      var marker = vehicles[vehNum]["marker"];
+      if (map.getZoom() <= 12) {  // small
+        if (status == "STOPPED") {
+          marker.setIcon(icon_bus_small_stop);
+        } else if (status == "OK") {
+          marker.setIcon(icon_bus_small_ok);
+        } else {  // must be a fault of some kind
+          marker.setIcon(icon_bus_small_fault);
+          marker.setZIndex(globalZindex+100);
+        }
+      } else {
+        if (status == "STOPPED") {
+          marker.setIcon(icon_bus_med_stop);
+        } else if (status == "OK") {
+        marker.setIcon(icon_bus_med_ok);
+        } else {  // must be a fault of some kind
+          marker.setIcon(icon_bus_med_fault);
+          marker.setZIndex(globalZindex+100);
+        }
+      }
+    }
+
+
+    parseGeoMessage = function(message) {
+      // var payload = 0;
+      // if (message.getXmlContent() != null) payload += message.getXmlContent().length;
+      // if (message.getBinaryAttachment() != null) payload += message.getBinaryAttachment().length;
+      //console.log("Received message on: "+message.getDestination().getName()+"  ("+payload+" bytes)");
+      var levels = message.getDestination().getName().split("/"); // topic levels   geo/bus/1001/001.308820/0103.876270/007/OK  --> geo/bus/VehNum/lat/lon/Route/Status
+      // var vehNum = levels.slice(4).join("/"); // essentially, the client name
+      var vehType = levels[1];
+      var vehNum = levels[2] * 1;
+      var lat = levels[3] * 1;
+      var lon = levels[4] * 1;
+      var payload = JSON.parse(getTextPayload(message));
+      //if (vehNum == 1000) console.log(payload);
+      var vehicle;  // for later
+      // now, have we seen this guy before?
+      if (!(vehNum in vehicles)) {
+        vehicles[vehNum] = {}; // create new hash
+        vehicle = vehicles[vehNum];
+        vehicle["type"] = vehType;
+        // vehicles[vehNum]["latOff"] = Math.random() / 20000;
+        // vehicles[vehNum]["lonOff"] = Math.random() / 20000;
+        vehicle["marker"] = new google.maps.Marker({
+        // vehicles[vehNum]["marker"] = new MarkerWithLabel({
+          zIndex: globalZindex++,
+        });
+        // if they click the icon, pop up a window
+        google.maps.event.addListener(vehicle["marker"], 'click', function() {
+          vehicle["marker"].setZIndex(globalZindex++);  // pop to top
+          vehicle["infoWindow"] = new google.maps.InfoWindow();
+          // populate with something
+          vehicle["infoWindow"].setContent(buildBusInfoWindowContent(vehNum));
+          vehicle["infoWindow"].open(map, vehicle["marker"]);
+          google.maps.event.addListener(vehicle["infoWindow"], 'closeclick', function() {
+            vehicle["infoWindow"] = null;
+          });
+        });
+      }
+      // now we've inserted the new guy for sure
+      vehicle = vehicles[vehNum];
+      //lat = lat + vehicle["latOff"];
+      //lon += vehicle["lonOff"];
+      vehicle["pos"] = new google.maps.LatLng(lat, lon);
+      vehicle["marker"].setPosition(vehicle["pos"]);
+      vehicle["marker"].setAnimation(google.maps.Animation.NONE);
+      vehicle["payload"] = payload;
+      if (vehType == "bus") {
+        vehicle["route"] = levels[5] * 1;  // numeric representation
+        setBusIcon(vehNum);
+      } else if (vehType == "taxi") {
+        vehicle["marker"].setIcon(icon_dot);
+      }
+        // text = 51.502110,-0.092490|63 Darwin Street, London SE17 1EZ, UK|51.492200,-0.087780|63 Watling Street, London EC4M 9DD, UK|51.512870,-0.093050
+        // remember! When sending from Java app, Need to encode the strings in Java with UTF-8 and write as byte attachments, don't use just text message! (uses WIn encoding on windows)
+        // var levels2 = text.split("|");
+        // label = levels2[0];
+        // if (levels2.length > 1) {
+          // startAddr = levels2[1];
+          // startLat = levels2[2].split(",")[0];
+          // startLon = levels2[2].split(",")[1];
+          // endAddr = levels2[3];
+          // endLat = levels2[4].split(",")[0];
+          // endLon = levels2[4].split(",")[1];
+
+      vehicle["marker"].setOpacity(1);
+      if (vehicle["marker"].getMap() == null) {  // this is needed to prevent flickering, rather than just setting the map explicitly
+        vehicle["marker"].setMap(map);
+      }
+      vehicle["ts"] = Date.now();
+      if (vehicle["infoWindow"] != null) {
+        // update it
+        vehicle["infoWindow"].setContent(buildBusInfoWindowContent(levels[2]));
+      }
+    }  // end parseGeoMessage
+
+
+    replyReceivedCb = function(session, message) {
+      var text = message.getBinaryAttachment();
+      //if (document.querySelector('#display').value == "Outline") {
+    //    updateSubsBoundary(text);
+    //  } else {
+        updateSubs(text);
+    //  }
+    };
+
+    replyFailedCb = function(session, event) {
+      console.log(event.infoStr);
+      console.log(event.toString());
+      setWorking(false);
+    };
+
+    this.utils_updateContent = function(msg) {
+      console.log("content: '" + msg + "'");
+    };
+
+    function myFunction() {
+      var x = document.createElement("INPUT");
+      x.setAttribute("type", "range");
+      document.body.appendChild(x);
+    }
+
+    function logslider(position) {
+      // position will be between 0 and 100
+      var minp = 0;
+      var maxp = 100;
+      // The result should be between 4 and 2000
+      var minv = Math.log(4);
+      var maxv = Math.log(2000);
+      // calculate adjustment factor
+      var scale = (maxv - minv) / (maxp - minp);
+      return Math.round(Math.exp(minv + scale * (position - minp)));
+    }
+
+    function revlogslider(position) {
+      // position will be between 0 and 100
+      var minp = 100; // reverse so it gets slower towards the top
+      var maxp = 0;
+      // The result should be between 10 and 99%
+      var minv = Math.log(10);
+      var maxv = Math.log(99);
+      // calculate adjustment factor
+      var scale = (maxv - minv) / (maxp - minp);
+      return Math.round(109 - Math.exp(minv + scale * (position - minp))); // subtract from 109 to flip the range from 99-10 => 10-99
+    }
+
+    google.maps.event.addDomListener(window, 'load', onLogin);
+  </script>
+</head>
+
+<body>
+  <!--div id="aa"><h1>Aar<span class="orange_o">O</span>n's Geo Routing Demo <span class="small">v2.0&beta;</span></h1></div-->
+
+  <div id="map-canvas"></div>
+  <div id="over_map_tl">
+    <h3>Filtering:</h3>
+    <table>
+      <tr>
+        <td>
+          <nobr><span class="newSliders">Show: </span>
+          <select id="show" onchange="updateSearch()">
+            <option value="all">All Vehicles</option>
+            <option value="buses">Only Buses</option>
+            <option value="taxi">Only Taxis</option>
+          </select></nobr>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <table>
+            <tr>
+              <td align="left">
+                <button id="addCircleButton" onclick="addNewCircle(); updateSearch()">Add Circle</button>
+              </td>
+              <td align="right">
+                <button id="addPolyButton" onclick="addNewPoly(); updateSearch();">Add Polygon</button>
+              </td>
+            </tr>
+            <tr>
+              <td align="left">
+                <button id="addRectButton" onclick="addNewRect(); updateSearch();">Add Rect</button>
+              </td>
+              <td align="right">
+                <button id="removeAllShapesButton" onclick="clearAllShapes();">Remove All Shapes</button>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <!--tr>
+        <td>
+          <nobr><span class="newSliders">Display: </span>
+          <select id="display" onchange="updateSearch()">
+            <option value="Outline">Outline</option>
+            <option value="Subscriptions">Subscriptions</option>
+          </select></nobr>
+        </td>
+      </tr-->
+      <tr>
+        <td>
+          <table>
+            <tr>
+              <td>
+                <label for=fader class="newSliders">Max Subs:</label>
+              </td>
+              <td>
+                <!--input type=range min=0 max=100 value=63 id=fader oninput="outputSubUpdate(value)" onchange="updateSearch()"-->
+                <input type=range min=0 max=100 value=69 id=fader oninput="outputSubUpdate(value)" onchange="updateSearch()">
+                <output for=fader id=subs class="newSliders">300</output>
+                <script>
+                  function outputSubUpdate(val) {
+                    document.querySelector('#subs').value = logslider(val);
+                    numSubs = logslider(val);
+                  }
+                </script>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <label for=fader2>Accuracy:</label>
+              </td>
+              <td>
+                <!--input type=range min=0 max=100 value=54 id=fader2 oninput="outputAccuracyUpdate(value)" onchange="updateSearch()"-->
+                <input type=range min=0 max=100 value=71 id=fader2 oninput="outputAccuracyUpdate(value)" onchange="updateSearch()">
+                <output for=fader2 id=accuracy class="newSliders">90</output><span class="newSliders">%</span>
+                <script>
+                  function outputAccuracyUpdate(val) {
+                    document.querySelector('#accuracy').value = revlogslider(val);
+                    accuracy = revlogslider(val) / 100.0;
+                  }
+                </script>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <nobr><span class="newSliders">Radix: </span>
+          <select id="radix" onchange="updateSearch()">
+            <option value=2>2</option>
+            <option value=4>4</option>
+            <option value=8>8</option>
+            <option value=10 selected>10</option>
+            <option value=16>16</option>
+          </select></nobr>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          Filter by Vehicle number: <input id="vehNum" onchange="updateSearch()" size="4"/><br/>
+          Filter by Route number: <input id="routeNum" onchange="updateSearch()" size="4"/>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <button id="heatButton" onclick="heatmap.setMap(heatmap.getMap() ? null : map); if (heatmap.getMap() && zoomLevel < 13) map.setZoom(13);">Toggle Heatmap</button>
+        </td>
+      </tr>
+    </table>
+
+  </div>
+  <div id="over_map_tr">
+    <h1>Real-time Connected Buses Demo</h1><p/><h3>Bidirectional IoT Communication using MQTT<br>Advanced Filtering and Routing Capabilities</h3>
+  </div
+
+</body>
+
+</html>
