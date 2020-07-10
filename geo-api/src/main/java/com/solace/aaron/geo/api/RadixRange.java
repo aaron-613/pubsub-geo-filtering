@@ -3,6 +3,10 @@ package com.solace.aaron.geo.api;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * This utility class is to 
+ *
+ */
 public class RadixRange {
 
     private final GeoStringFormatter formatter;

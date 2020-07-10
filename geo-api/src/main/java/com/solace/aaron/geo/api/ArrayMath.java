@@ -3,9 +3,20 @@ package com.solace.aaron.geo.api;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Ok, this class was made because we now support multiple "targets" in the geo-filtering
+ * algorithm.  It performs a particular operation (add, multiply, etc.) across a group of 
+ * numbers.
+ * 
+ * @author AaronLee
+ *
+ */
 public final class ArrayMath {
 
-    
+    /**
+     * Returns the sum of one array of numbers to another.
+     * Asserts that the array lengths are the same
+     */
     public static final double[] add(double[] da1, double[] da2) {
         assert da1.length == da2.length;
         double[] retArray = new double[da1.length];
@@ -15,6 +26,10 @@ public final class ArrayMath {
         return retArray;
     }
 
+    /**
+     * Returns the difference of one array of numbers to another.
+     * Asserts that the array lengths are the same
+     */
     public static final double[] subtract(double[] da1, double[] da2) {
         assert da1.length == da2.length;
         double[] retArray = new double[da1.length];
@@ -24,7 +39,11 @@ public final class ArrayMath {
         return retArray;
     }
     
-    public static final double[] multiply(double[] da1, double[] da2) {
+    /**
+     * Returns the product of one array of numbers to another.
+     * Asserts that the array lengths are the same
+     */
+    private static final double[] multiply(double[] da1, double[] da2) {
         assert da1.length == da2.length;
         double[] retArray = new double[da1.length];
         for (int i=0;i<da1.length;i++) {
@@ -33,6 +52,9 @@ public final class ArrayMath {
         return retArray;
     }
 
+    /**
+     * Returns the product of an array by a particular number.
+     */
     public static final double[] multiply(double[] da1, double val) {
         double[] retArray = new double[da1.length];
         for (int i=0;i<da1.length;i++) {
@@ -41,6 +63,10 @@ public final class ArrayMath {
         return retArray;
     }
 
+    /**
+     * Returns the division of one array of numbers to another.
+     * Asserts that the array lengths are the same
+     */
     public static final double[] divide(double[] da1, double[] da2) {
         assert da1.length == da2.length;
         double[] retArray = new double[da1.length];
@@ -70,7 +96,7 @@ public final class ArrayMath {
      * @param val
      * @return
      */
-    public static final Set<Integer> lessThanSet(double [] da, double val) {
+    private static final Set<Integer> lessThanSet(double [] da, double val) {
         Set<Integer> retSet = new HashSet<>();
         for (int i=0;i<da.length;i++) {
             if (da[i] < val) {
@@ -80,7 +106,10 @@ public final class ArrayMath {
         return retSet;
     }
 
-    public static final boolean moreThan(double [] da, double val) {
+    /**
+     * Returns true if at least one value inside the array is greater than val.
+     */
+    private static final boolean moreThan(double [] da, double val) {
         boolean allGood = true;
         for (int i=0;i<da.length;i++) {
             allGood = allGood & da[i] > val;
@@ -88,7 +117,14 @@ public final class ArrayMath {
         return allGood;
     }
 
-    public static final Set<Integer> moreThanSet(double [] da, double val) {
+    /**
+     * Looks through the passed array and compares each entry to the passed value,
+     * and then returns a Set of 
+     * @param da
+     * @param val
+     * @return
+     */
+    private static final Set<Integer> moreThanSet(double [] da, double val) {
         Set<Integer> retSet = new HashSet<>();
         for (int i=0;i<da.length;i++) {
             if (da[i] > val) {
@@ -99,9 +135,8 @@ public final class ArrayMath {
     }
     
     /**
+     * Searches through an array and returns the index of the max value.
      * Will return -1 if the set is empty
-     * @param da
-     * @return
      */
     public static int getMaxIndex(double[] da) {
         int index = -1;
@@ -109,7 +144,7 @@ public final class ArrayMath {
             double curMax = da[0];
             index = 0;
             if (da.length > 1) {
-                for (int i=0;i<da.length;i++) {
+                for (int i=1;i<da.length;i++) {
                     if (da[i] > curMax) {
                         curMax = da[i];
                         index = i;

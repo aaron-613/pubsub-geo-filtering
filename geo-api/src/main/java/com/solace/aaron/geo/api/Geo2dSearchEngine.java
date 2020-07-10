@@ -6,6 +6,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.locationtech.jts.geom.Geometry;
 
+/**
+ * This simple class defines the parameters used by the geospactial search. It is a generisized version
+ * of the standard decimal placement.
+ * 
+ */
 public class Geo2dSearchEngine {
 
     

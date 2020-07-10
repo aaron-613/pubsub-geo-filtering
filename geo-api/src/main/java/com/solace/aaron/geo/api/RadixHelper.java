@@ -39,7 +39,7 @@ public class RadixHelper {
     public static void printTableMetres(double max, double finestResInMetres) {
         finestResInMetres = Math.abs(finestResInMetres);
         System.out.printf("Table for max val=%.4f, resolution=%.2f metres:%n",max,finestResInMetres);
-        finestResInMetres = LatLonHelper.convertMetresToDd(finestResInMetres);
+        finestResInMetres = LatLonHelper.convertMetresToDecimalDegree(finestResInMetres);
         for (int radix=2;radix<=36;radix++) {
             if (radix == 2 || radix == 17) {
                 System.out.printf("%n%6s %8s %6s %11s %11s %8s %6s %11s %11s%n", "Radix", "Width", "Scale", "Max Reso", "Largest", "Width", "Scale", "Max Reso", "Largest");
@@ -51,8 +51,8 @@ public class RadixHelper {
             int lWidth = (int)Math.ceil(Math.log10((max * Math.pow(radix,lScale))) / Math.log10(radix));
             double hResolution = 1.0/Math.pow(radix,hScale);
             double lResolution = 1.0/Math.pow(radix,lScale);
-            hResolution = LatLonHelper.convertDdToMetres(hResolution);
-            lResolution = LatLonHelper.convertDdToMetres(lResolution);
+            hResolution = LatLonHelper.convertDecimalDegreeToMetres(hResolution);
+            lResolution = LatLonHelper.convertDecimalDegreeToMetres(lResolution);
             double hLargest = (Math.pow(radix,hWidth)-0)/(Math.pow(radix,hScale))-1;
             double lLargest = (Math.pow(radix,lWidth)-0)/(Math.pow(radix,lScale))-1;
             
@@ -130,7 +130,7 @@ public class RadixHelper {
             if (width <= 0) continue;
             System.out.printf("With scale=%d, width=%d:%n",scale,width);
             System.out.printf(" * this will provide a maximum resolution of %f units (base 10)%n",reso);
-            System.out.printf("    * or ~%.1f metres if this is lat/lon decimal degreees%n",LatLonHelper.convertDdToMetres(reso));
+            System.out.printf("    * or ~%.1f metres if this is lat/lon decimal degreees%n",LatLonHelper.convertDecimalDegreeToMetres(reso));
             System.out.printf(" * said another way, this will allow a maximum of %d 'slices' of the range%n",(int)Math.ceil(range/reso));
             double largest = (Math.pow(radix,width)-0)/(Math.pow(radix,scale))-1;
             System.out.printf(" * these values would allow a maximum representable value of 0..%f units%n",largest);

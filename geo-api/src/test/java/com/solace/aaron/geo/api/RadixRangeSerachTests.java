@@ -79,7 +79,10 @@ public class RadixRangeSerachTests {
 */
         Geometry target = factory.createPolygon(coords2);
 
-        Geo2dSearch rrs = new Geo2dSearch(10,7,7,4,4,90,180);
+        //Geo2dSearch rrs = new Geo2dSearch(10,7,7,4,4,90,180);
+        Geo2dSearchEngine engine = new Geo2dSearchEngine(10,7,4,4,90,180);
+        Geo2dSearch rrs = new Geo2dSearch(engine,new Geometry[]{target});
+        
 //        com.solace.aaron.rnrf2.RadixRangeSearch2d2 rrs = new RadixRangeSearch2d(2,19,20,12,12,true,true,target);
 //        com.solace.aaron.rnrf2.RadixRangeSearch2d2 rrs = new RadixRangeSearch2d(16,5,5,3,3,true,true,target);
 //        for (int i=0;i<20;i++) {
@@ -89,16 +92,16 @@ public class RadixRangeSerachTests {
 //        }
         
         
-        Geo2dSearchResult result = rrs.splitToRatio(target,0.95,1500);
+        Geo2dSearchResult result = rrs.splitToRatio(0.95,1500);
         System.out.println(result.getSubs().toString());
         System.out.println(result.getSubs().size());
         //System.out.printf("%.4f%%%n",result.getCurrentCoverageRatio()*100);
-        List<List<Double>> squares = result.getSquares();
-        for (List<Double> ar : squares) {
+        List<List<Rect>> squares = result.getSquares();
+        for (List<Rect> ar : squares) {
             System.out.println(ar);
         }
-        System.out.println(result.getUnion().intersects(target));
-        System.out.println(result.getUnion().intersection(target).getArea() / result.getUnion().getArea());
+//        System.out.println(result.getUnion().intersects(target));
+//        System.out.println(result.getUnion().intersection(target).getArea() / result.getUnion().getArea());
         System.out.println(result.getUnion());
 
         

@@ -15,7 +15,7 @@ public class LatLonHelper {
      * @return returns a array with length=2 of doubles, where [0]=width (lat) in decimal degrees, and [1]=height (lon) in decimal degrees
      */
     public static double[] getLatLonCircleDimensions(double centerLat, double centerLon, double radiusMetres) {
-        double latOffset = convertMetresToDd(radiusMetres);
+        double latOffset = convertMetresToDecimalDegree(radiusMetres);
         double lonOffset = latOffset / Math.cos(centerLat*Math.PI/180.0);
         return new double[] {2*latOffset,2*lonOffset};
     }
@@ -48,18 +48,18 @@ where Earth's equatorial radius {\displaystyle a} a equals 6,378,137 m and {\dis
         //double b_a = 0.99664719;
         
         
-        double latOffset = convertMetresToDd(radiusMetres);
+        double latOffset = convertMetresToDecimalDegree(radiusMetres);
         double lonOffset = latOffset / Math.cos(centerLat*Math.PI/180.0);
         return new double[] {2*latOffset,2*lonOffset};
     }
     
     
     
-    public static double convertMetresToDd(double metres) {
+    public static double convertMetresToDecimalDegree(double metres) {
         return metres / METRES_PER_DEGREE;
     }
     
-    public static double convertDdToMetres(double degrees) {
+    public static double convertDecimalDegreeToMetres(double degrees) {
         return degrees * METRES_PER_DEGREE;
     }
 }

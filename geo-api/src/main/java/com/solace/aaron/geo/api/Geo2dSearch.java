@@ -460,20 +460,23 @@ public class Geo2dSearch {
 //        private RadixGrid(Geometry[] parentsIntersectedTargets, int xFactor, int yFactor) {
 //            this(parentsIntersectedTargets,new "","",xFactor,yFactor);
 //        }
-        
+
+        /**
+         * This internal class is used specifically for calculating intersected shapes.
+         */
         private class TargetObject implements Comparable<TargetObject> {
             
-            private final Geometry trimmedTarget;
+//            private final Geometry trimmedTarget;
             private int index;
             private final double coverageRatio;
             
             private TargetObject(Geometry target, int index, double coverageRatio) {
-                this.trimmedTarget = target;
+//                this.trimmedTarget = target;
                 this.index = index;
                 this.coverageRatio = coverageRatio;
             }
 
-            private TargetObject(Geometry parentTarget, int index) {
+/*            private TargetObject(Geometry parentTarget, int index) {
                 this.trimmedTarget = parentTarget.intersection(RadixGrid.this.gridPolygon);
                 if (trimmedTarget instanceof GeometryCollection) {
                     System.out.println(trimmedTarget);
@@ -481,7 +484,7 @@ public class Geo2dSearch {
                 this.index = index;
                 this.coverageRatio = trimmedTarget.getArea()/getGridArea();
             }
-
+*/
             @Override
             public int compareTo(TargetObject t) {
                 if (this.coverageRatio < t.coverageRatio) return 1;
