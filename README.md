@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # pubsub-geo-filtering
 
 Finally getting my geo-filtering code posted up to GitHub.  Will document more later.
@@ -45,7 +44,7 @@ Significant changes to the algorithm have been made to greatly simplify it and i
 
 # Live Demo
 
-https://sg.solace.com/aa
+https://sg.solace.com/bus
 
 # Papers
 
