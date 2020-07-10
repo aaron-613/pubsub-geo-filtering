@@ -49,6 +49,3 @@ https://sg.solace.com/bus
 # Papers
 
 https://worldcomp-proceedings.com/proc/p2016/ICM3967.pdf
-
-
->>>>>>> e7c3eb9218acc93f715c06ca60c4a3ecb7ea5074
