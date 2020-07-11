@@ -13,7 +13,7 @@ import com.solace.aaron.geo.api.LatLonHelper;
 
 public class Search {
 
-	/** The minimum number of subscriptions that may be requested */
+    /** The minimum number of subscriptions that may be requested */
     public static final int MIN_SUBS = 4;
     
     /** The maximum number of subscriptions that may be requested */
@@ -33,74 +33,74 @@ public class Search {
     String topicSuffix = "/>";
     
     public Search(JsonObject request) throws IllegalArgumentException {
-    	if (request.containsKey("accuracy")) {
-    		try {
-    			double acc = request.getJsonNumber("accuracy").doubleValue();
+        if (request.containsKey("accuracy")) {
+            try {
+                double acc = request.getJsonNumber("accuracy").doubleValue();
                 if (acc >= MIN_ACC && acc <= MAX_ACC) this.accuracy = acc;
-    		} catch (NumberFormatException e) {
+            } catch (NumberFormatException e) {
                 System.out.printf("That didn't work for accuracy '%s': %s%n",request.get("accuracy"),e);
                
-    		} catch (ClassCastException e) {
+            } catch (ClassCastException e) {
                 System.out.printf("That didn't work for accuracy '%s': %s%n",request.get("accuracy"),e);
-    		}
-    	}
-    	if (request.containsKey("numSubs")) {
-    		try {
-    			 int num = request.getJsonNumber("numSubs").intValue();
+            }
+        }
+        if (request.containsKey("numSubs")) {
+            try {
+                 int num = request.getJsonNumber("numSubs").intValue();
                 if (num >= MIN_SUBS && num <= MAX_SUBS) this.numSubs = num;
-    		} catch (NumberFormatException e) {
+            } catch (NumberFormatException e) {
                 System.out.printf("That didn't work for numSubs '%s': %s%n",request.get("numSubs"),e);
-    		} catch (ClassCastException e) {
+            } catch (ClassCastException e) {
                 System.out.printf("That didn't work for numSubs '%s': %s%n",request.get("numSubs"),e);
-    		}
-    	}
-    	if (request.containsKey("radix")) {
-    		radix = request.getJsonNumber("radix").intValue();
+            }
+        }
+        if (request.containsKey("radix")) {
+            radix = request.getJsonNumber("radix").intValue();
             topicPrefix = "geo"+radix+"/*/";
-    	}
-    	if (request.containsKey("topicPrefix")) {
-    		topicPrefix = request.getJsonString("topicPrefix").getString();
-    	}
-    	if (request.containsKey("topicSuffix")) {
-    		topicSuffix = request.getJsonString("topicSuffix").getString();
-    	}
-    	if (request.containsKey("shapes")) {
-    		JsonObject shapes = request.getJsonObject("shapes");
-    		if (shapes.containsKey("polys")) {
-    			JsonArray polys = shapes.getJsonArray("polys");
-    			for (int i=0;i<polys.size();i++) {
-    				Polygon poly = new GeometryFactory().createPolygon(getCoords(polys.getJsonObject(i).getJsonArray("coords")));
+        }
+        if (request.containsKey("topicPrefix")) {
+            topicPrefix = request.getJsonString("topicPrefix").getString();
+        }
+        if (request.containsKey("topicSuffix")) {
+            topicSuffix = request.getJsonString("topicSuffix").getString();
+        }
+        if (request.containsKey("shapes")) {
+            JsonObject shapes = request.getJsonObject("shapes");
+            if (shapes.containsKey("polys")) {
+                JsonArray polys = shapes.getJsonArray("polys");
+                for (int i=0;i<polys.size();i++) {
+                    Polygon poly = new GeometryFactory().createPolygon(getCoords(polys.getJsonObject(i).getJsonArray("coords")));
                     target = target.union(poly.isSimple() ? poly : poly.convexHull());
-    			}
-    		}
-    		if (shapes.containsKey("circles")) {
-    			JsonArray circles = shapes.getJsonArray("circles");
-    			for (int i=0;i<circles.size();i++) {
-    				JsonObject circle = circles.getJsonObject(i);
-    				GeometricShapeFactory gf = new GeometricShapeFactory();
-    				double x = circle.getJsonArray("coords").getJsonNumber(0).doubleValue();
-    				double y = circle.getJsonArray("coords").getJsonNumber(1).doubleValue();
-    				double radius = circle.getJsonNumber("radius").doubleValue();
-    				gf.setCentre(new Coordinate(x,y));
-    				if (circle.containsKey("modifier") && circle.getJsonString("modifier").getString().equals("metresToLatLon")) {
+                }
+            }
+            if (shapes.containsKey("circles")) {
+                JsonArray circles = shapes.getJsonArray("circles");
+                for (int i=0;i<circles.size();i++) {
+                    JsonObject circle = circles.getJsonObject(i);
+                    GeometricShapeFactory gf = new GeometricShapeFactory();
+                    double x = circle.getJsonArray("coords").getJsonNumber(0).doubleValue();
+                    double y = circle.getJsonArray("coords").getJsonNumber(1).doubleValue();
+                    double radius = circle.getJsonNumber("radius").doubleValue();
+                    gf.setCentre(new Coordinate(x,y));
+                    if (circle.containsKey("modifier") && circle.getJsonString("modifier").getString().equals("metresToLatLon")) {
                         gf.setWidth(LatLonHelper.getLatLonCircleDimensions(x,y,radius)[0]);  // lat offset, even though it is width, b/c order matters
                         gf.setHeight(LatLonHelper.getLatLonCircleDimensions(x,y,radius)[1]);
-    				} else {
+                    } else {
                         gf.setWidth(radius*2);  // I guess?  We haven't tested this yet.
                         gf.setHeight(radius*2);
-    				}
+                    }
                     gf.setNumPoints(72);
                     Geometry c = gf.createCircle();
                     target = target.union(c);
-    			}
-    		}
-    	}
+                }
+            }
+        }
     }
     
     private static Coordinate[] getCoords(JsonArray coords) {
         Coordinate[] ret = new Coordinate[coords.size()+1];
         for (int i=0;i<coords.size();i++) {
-        	JsonArray pair = coords.getJsonArray(i);
+            JsonArray pair = coords.getJsonArray(i);
             ret[i] = new Coordinate(pair.getJsonNumber(0).doubleValue(), pair.getJsonNumber(1).doubleValue());
         }
         ret[ret.length-1] = new Coordinate(ret[0]);  // close the shape

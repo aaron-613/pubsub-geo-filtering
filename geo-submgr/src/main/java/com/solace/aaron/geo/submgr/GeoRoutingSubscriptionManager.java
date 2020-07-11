@@ -124,13 +124,13 @@ public class GeoRoutingSubscriptionManager implements XMLMessageListener {
         JsonObject previous = msgJsonObject.getJsonObject("previous");
         Search search = null;
         if (previous.isEmpty()) {
-        	// all good, means this is the first search
+            // all good, means this is the first search
         } else {
-        	search = new Search(previous);
-        	doSubscriptions(search,SubAction.REMOVE,origMsg);
+            search = new Search(previous);
+            doSubscriptions(search,SubAction.REMOVE,origMsg);
         }
         search = new Search(msgJsonObject);
-    	doSubscriptions(search,SubAction.ADD,origMsg);        
+        doSubscriptions(search,SubAction.ADD,origMsg);        
     }
     
     void doSubscriptions(final Search search, final SubAction action, final BytesXMLMessage origMsg) throws JCSMPException {
@@ -204,7 +204,7 @@ public class GeoRoutingSubscriptionManager implements XMLMessageListener {
         logger.info("A total of "+subs.size()+" subscriptions were generated");
         int subBytes = 0;
         for (String sub : subs) {
-        	subBytes += sub.length();
+            subBytes += sub.length();
         }
         logger.info("Total # of sub bytes = "+subBytes);
         logger.info("Final area coverage ratio = "+grid.getCurrentCoverageRatio());
@@ -228,7 +228,7 @@ public class GeoRoutingSubscriptionManager implements XMLMessageListener {
             result = String.format("Num Subs = %d, Coverage Ratio = %.3f%%|%s",subs.size(),grid.getCurrentCoverageRatio()*100,sb.toString());
         } else if ("rather return".equals("wkt strings")) {
 
-        	result = String.format("Num Subs = %d, Coverage Ratio = %.3f%%|%s",subs.size(),grid.getCurrentCoverageRatio()*100,sb.toString());
+            result = String.format("Num Subs = %d, Coverage Ratio = %.3f%%|%s",subs.size(),grid.getCurrentCoverageRatio()*100,sb.toString());
         } else {
             if (grid.getSubs().size() > 0) {
                 for (String[] coord : grid.getSquares()) {

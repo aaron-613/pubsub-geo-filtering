@@ -20,11 +20,11 @@ public class RadixRangeSerachTests {
     @Test
     public void testSearchWorks() {
 
-    	RadixStringFormatter rsf = new RadixStringFormatter(10, 4, 7, 90);
+        RadixStringFormatter rsf = new RadixStringFormatter(10, 4, 7, 90);
 //        System.out.println("0.3");
-//    	System.out.println(rsf.convert(0.3999999));
-//    	System.out.println("0003");
-//    	System.out.println(rsf.getInner("0003"));
+//        System.out.println(rsf.convert(0.3999999));
+//        System.out.println("0003");
+//        System.out.println(rsf.getInner("0003"));
 //        System.out.println(rsf.getOuter2("0003"));
 //        System.out.println("00030");
 //        System.out.println(rsf.getInner("00030"));
@@ -45,13 +45,13 @@ public class RadixRangeSerachTests {
         System.out.println(d3 - 90);
         
 //        System.exit(0);
-    	for (int i=0;i<10;i++) {
-    	    double d = Math.random()*90;
-    	    double dd = rsf.getInner(rsf.convert(d));
-    	    System.out.printf("%15.6f --> %s --> %9f  %f%n",d,rsf.convert(d),dd,d-dd);
-    	}
-    	rsf.convert(7.955848);
-    	
+        for (int i=0;i<10;i++) {
+            double d = Math.random()*90;
+            double dd = rsf.getInner(rsf.convert(d));
+            System.out.printf("%15.6f --> %s --> %9f  %f%n",d,rsf.convert(d),dd,d-dd);
+        }
+        rsf.convert(7.955848);
+        
 //        System.exit(0);
 
         WKTWriter wktWriter = new WKTWriter();

@@ -242,7 +242,7 @@ public class Geo2dSearch {
 //        }
         
         if (rootNode.getUnion() instanceof GeometryCollection) {
-        	throw new AssertionError("Union is not a single object");
+            throw new AssertionError("Union is not a single object");
         }
         logger.info("OverRatio: "+Arrays.toString(overRatios));
         logger.info("UnderRatio: "+Arrays.toString(underRatios));
@@ -315,10 +315,10 @@ public class Geo2dSearch {
         double x2 = innerX+(RadixUtils.lookupInverseFactors(radix,xFactor)*quadrant.xNegativeModifier);
         double y2 = innerY+(RadixUtils.lookupInverseFactors(radix,yFactor)*quadrant.yNegativeModifier);
         String[] coords2 = {
-        		Double.toString(Math.min(x1,x2)),
-        		Double.toString(Math.min(y1,y2)),
-        		Double.toString(Math.max(x1,x2)),
-        		Double.toString(Math.max(y1,y2))
+                Double.toString(Math.min(x1,x2)),
+                Double.toString(Math.min(y1,y2)),
+                Double.toString(Math.max(x1,x2)),
+                Double.toString(Math.max(y1,y2))
         };
         return coords2;
     }
@@ -544,9 +544,9 @@ public class Geo2dSearch {
             // first, let's trim all the targets to this new grid
             for (int i=0;i<parentsIntersectedTargets.length;i++) {
                 if (parentsIntersectedTargets[i] != null) {
-                	Geometry intersectedTarget = parentsIntersectedTargets[i].intersection(this.gridPolygon);
-            	    intersectedTarget = keepOnlyPolygons(intersectedTarget);  // get rid of any lines or points
-            	    trimmedTargets[i] = intersectedTarget;
+                    Geometry intersectedTarget = parentsIntersectedTargets[i].intersection(this.gridPolygon);
+                    intersectedTarget = keepOnlyPolygons(intersectedTarget);  // get rid of any lines or points
+                    trimmedTargets[i] = intersectedTarget;
                     double targetCoverageRatio = intersectedTarget.getArea()/getGridArea();
                     // if the trimmed target has a non-trivial intersection, then add it to the list of targets for tracking
                     if (intersectedTarget.getArea() > 0) {
@@ -565,7 +565,7 @@ public class Geo2dSearch {
                     }
                 }
             }
-          	this.staticCoverageRatio = computedRatio;
+              this.staticCoverageRatio = computedRatio;
         }
         
         int getBiggestIntersectedTarget() {
@@ -773,8 +773,8 @@ public class Geo2dSearch {
                 sb.append('|');
                 for (int x=0;x<engine.getRadix();x++) {
                     RadixGrid temp = new RadixGrid(this,
-                    		new RadixRange(engine.getXStringFormatter(),xRange.getVal()+RadixStringFormatter.radixCharConvert(x)),
-                    		new RadixRange(engine.getYStringFormatter(),yRange.getVal()+RadixStringFormatter.radixCharConvert(y)),
+                            new RadixRange(engine.getXStringFormatter(),xRange.getVal()+RadixStringFormatter.radixCharConvert(x)),
+                            new RadixRange(engine.getYStringFormatter(),yRange.getVal()+RadixStringFormatter.radixCharConvert(y)),
                             xFactor-engine.getXFixedScale()+1,yFactor-engine.getYFixedScale()+1);
                     if (temp.intersects()) sb.append("()");
                     else sb.append("  ");
