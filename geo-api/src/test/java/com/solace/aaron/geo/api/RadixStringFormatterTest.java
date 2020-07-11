@@ -1,14 +1,12 @@
 package com.solace.aaron.geo.api;
 
-import org.junit.Test;
-
-import com.solace.aaron.geo.api.RadixStringFormatter;
-import com.solace.aaron.geo.api.RadixStringFormatter.Builder;
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.junit.Test;
+
+import com.solace.aaron.geo.api.RadixStringFormatter.Builder;
 
 public class RadixStringFormatterTest {
     

@@ -79,10 +79,9 @@ public class RadixStringFormatter implements GeoStringFormatter {
      * <li>width = 1</li>
      * <li>factor = 0</li>
      * </ul>
-     * @author Aaron Lee
      *
      */
-    private static class Builder {
+    static class Builder {
         
         private int radix = 10;
         private int width = 10;
@@ -91,7 +90,7 @@ public class RadixStringFormatter implements GeoStringFormatter {
         
         // default constructor
         
-        private Builder radix(int radix) {
+        Builder radix(int radix) {
             if (radix <= 1 || radix > 36) {
                 throw new IllegalArgumentException(String.format("Invalid value of radix (%d), must be in [2..36]",radix));
             }
@@ -99,7 +98,7 @@ public class RadixStringFormatter implements GeoStringFormatter {
             return this;
         }
         
-        private Builder width(int width) {
+        Builder width(int width) {
             if (width <= 0 || width > 64) {
                 throw new IllegalArgumentException(String.format("Invalid value of width (%d), must be in [1..64]",width));
             }
@@ -107,21 +106,21 @@ public class RadixStringFormatter implements GeoStringFormatter {
             return this;
         }
         
-        private Builder scale(int scale) {
+        Builder scale(int scale) {
             this.scale = scale;
             return this;
         }
 
-        private Builder offset(int offset) {
+        Builder offset(int offset) {
             this.offset = offset;
             return this;
         }
         
-        private RadixStringFormatter build() {
+        RadixStringFormatter build() {
             return new RadixStringFormatter(radix,width,scale,offset);
         }
         
-        private String convert(double val) {
+        String convert(double val) {
             return new RadixStringFormatter(radix,width,scale,offset).convert(val);
         }
         
@@ -138,16 +137,16 @@ public class RadixStringFormatter implements GeoStringFormatter {
             return build().toString();
         }
         
-        private String debugConvert(double val) {
+        String debugConvert(double val) {
             RadixStringFormatter formatter = build();
             return String.format("Convert %s,  val=%f ==> '%s'", formatter, val, formatter.convert(val));
         }
 
-        private String debugGetInner(String radixString) {
+        String debugGetInner(String radixString) {
             return String.format("getInner %s,  radixString='%s' ==> %f", toString(), radixString, getInner(radixString));
         }
 
-        private String debugGetOuter(String radixString) {
+        String debugGetOuter(String radixString) {
             return String.format("getOuter %s,  radixString='%s' ==> %s", toString(), radixString, Double.toString(getOuter(radixString)));
         }
     }
@@ -170,7 +169,7 @@ public class RadixStringFormatter implements GeoStringFormatter {
      * @param width How many total characters long is the generated radix string? E.g. if radix=10, and scale=2, and width=5, then 12.34 == '01234'
      * @param offset If lowest value isn't 0, how much to shift by?  E.g. -180 for longitude, -90 for latitude 
      */
-    private RadixStringFormatter(int radix, int width, int scale, int offset) {
+    RadixStringFormatter(int radix, int width, int scale, int offset) {
         this.radix = radix;
         this.scale = scale;
         this.multiplier = Math.pow(radix, scale);
@@ -244,7 +243,7 @@ public class RadixStringFormatter implements GeoStringFormatter {
         }
     }
 
-    private static char radixCharConvert(int digit) {
+    static char radixCharConvert(int digit) {
         assert digit >= 0 : "digit can't be negative, but digit=="+digit;
         assert digit < 36 : "digit must be less than radix 36, but digit=="+digit;
         if (digit < 10) {

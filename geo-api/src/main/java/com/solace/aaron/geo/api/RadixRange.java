@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * This utility class is to 
+ * This utility class is used to represent a range of 
  *
  */
 public class RadixRange {
