@@ -157,8 +157,8 @@ public class RadixStringFormatter implements GeoStringFormatter {
     private final int radix;
     private final int width;
     private final int scale;
-    private final double multiplier;
     private final int offset;
+    private final double multiplier;
     private final double offsetMultiplier;
     
     /**
@@ -169,7 +169,7 @@ public class RadixStringFormatter implements GeoStringFormatter {
      * @param width How many total characters long is the generated radix string? E.g. if radix=10, and scale=2, and width=5, then 12.34 == '01234'
      * @param offset If lowest value isn't 0, how much to shift by?  E.g. -180 for longitude, -90 for latitude 
      */
-    RadixStringFormatter(int radix, int width, int scale, int offset) {
+    private RadixStringFormatter(int radix, int width, int scale, int offset) {
         this.radix = radix;
         this.scale = scale;
         this.multiplier = Math.pow(radix, scale);
@@ -185,15 +185,15 @@ public class RadixStringFormatter implements GeoStringFormatter {
         return radix;
     }
     
-    private int getWidth() {
+    public int getWidth() {
         return width;
     }
     
-    private int getScale() {
+    public int getScale() {
         return scale;
     }
     
-    private int getOffset() {
+    public int getOffset() {
         return offset;
     }
     
@@ -243,6 +243,11 @@ public class RadixStringFormatter implements GeoStringFormatter {
         }
     }
 
+    /**
+     * Pass in a value from 0->36, and this will return a char '0'..'9','A'..'Z'
+     * @param digit in [0..36]
+     * @return ['0'..'9','A'..'Z']
+     */
     static char radixCharConvert(int digit) {
         assert digit >= 0 : "digit can't be negative, but digit=="+digit;
         assert digit < 36 : "digit must be less than radix 36, but digit=="+digit;
