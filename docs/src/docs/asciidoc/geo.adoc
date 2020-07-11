@@ -1,6 +1,6 @@
-= Greeter Command-line Application
+= Aaron's GeoSpatial Solace Filtering v2
 
-A simple application demonstrating the flexibility of a Gradle multi-project.
+This page is lks jfla fkjdsalfkjadsfj.
 
 == Installation
 
@@ -8,10 +8,11 @@ Unpack the ZIP or TAR file in a suitable location
 
 == Usage
 
+How to build:
+
 [listing]
 ----
-$ cd greeter-1.0
-$ ./bin/greeter gradlephant
+$ ./gradlew assemble eclipse
 
-Hello, Gradlephant
+This is the end.
 ----
