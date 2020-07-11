@@ -25,7 +25,7 @@ public class LatLonHelper {
      * 
      * https://en.wikipedia.org/wiki/Geographic_coordinate_system
      * 
-     * On the WGS84 spheroid, the length in meters of a degree of latitude at latitude phi (that is, the distance along a north–south line from latitude (phi - 0.5) degrees to (phi + 0.5) degrees) is about
+     * On the WGS84 spheroid, the length in meters of a degree of latitude at latitude phi (that is, the distance along a north-south line from latitude (phi - 0.5) degrees to (phi + 0.5) degrees) is about
 
 {\displaystyle 111132.92-559.82\, &cosine; 2\varphi +1.175\,\cos 4\varphi -0.0023\,\cos 6\varphi } 111132.92-559.82\,\cos 2\varphi +1.175\,\cos 4\varphi -0.0023\,\cos 6\varphi [14]
 Similarly, the length in meters of a degree of longitude can be calculated as
