@@ -2,6 +2,7 @@
 .project
 .classpath
 .settings
+~$radix_calcs.xlsx
 geo-api/bak
 geo-api/build
 geo-api/.classpath
