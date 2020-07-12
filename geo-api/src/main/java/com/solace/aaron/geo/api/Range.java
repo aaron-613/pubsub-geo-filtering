@@ -7,18 +7,18 @@ import java.util.List;
  * This utility class is used to represent a range of 
  *
  */
-public class RadixRange {
+public class Range {
 
     private final GeoStringFormatter formatter;
     private final String val;
     private final double inner;
     private final double outer;
     
-    public RadixRange(GeoStringFormatter formatter) {
+    public Range(GeoStringFormatter formatter) {
         this(formatter,"");
     }    
     
-    public RadixRange(GeoStringFormatter formatter, String val) {
+    public Range(GeoStringFormatter formatter, String val) {
         this.formatter = formatter;
         this.val = val;
         this.inner = formatter.getInner(val);
@@ -29,10 +29,6 @@ public class RadixRange {
         return val.length();
     }
     
-    public GeoStringFormatter getFormatter() {
-        return formatter;
-    }
-
     public String getVal() {
         return val;
     }
@@ -45,15 +41,15 @@ public class RadixRange {
         return outer;
     }
     
-    public List<RadixRange> getChildren() {
+    public List<Range> buildChildren() {
         final int radix = formatter.getRadix();
-        List<RadixRange> children = new ArrayList<>(radix);
+        List<Range> children = new ArrayList<>(radix);
         final int valLength = val.length();
         char[] childValChars = new char[valLength+1];  // reusable object for constructing children topic strings
         val.getChars(0, valLength, childValChars, 0);  // copy the current topic string into the new array
         for (int i=0;i<radix;i++) {
             childValChars[valLength] = RadixStringFormatter.radixCharConvert(i);  // overwrite the last char of the array with incrementing digits
-            children.add(new RadixRange(formatter,new String(childValChars)));
+            children.add(new Range(formatter,new String(childValChars)));
         }
         return children;
     }

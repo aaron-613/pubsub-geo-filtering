@@ -20,7 +20,7 @@ public class RadixRangeSerachTests {
     @Test
     public void testSearchWorks() {
 
-        RadixStringFormatter rsf = new RadixStringFormatter(10, 4, 7, 90);
+        RadixStringFormatter rsf = new RadixStringFormatter.Builder().radix(10).scale(4).width(7).offset(90).build();
 //        System.out.println("0.3");
 //        System.out.println(rsf.convert(0.3999999));
 //        System.out.println("0003");

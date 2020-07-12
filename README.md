@@ -14,7 +14,7 @@ Finally getting my geo-filtering code posted up to GitHub.  Will document more l
 
 # Live Demo
 
-https://sg.solace.com/aa
+https://sg.solace.com/bus
 
 # Papers
 

@@ -41,7 +41,7 @@ public class RadixUtils {
      * @param maxRange
      * @return
      */
-    private static int calcFactor(double maxRange, int radix) {
+    public static int calcFactor(double maxRange, int radix) {
         if (radix == 10) return -(int)Math.ceil(Math.log10(Math.abs(maxRange)));
         else return -(int)Math.ceil(Math.log10(Math.abs(maxRange))/Math.log10(radix));
     }

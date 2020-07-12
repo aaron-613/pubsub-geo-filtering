@@ -23,6 +23,43 @@ public class RadixStringFormatterTest {
 
     @Test
     public void scaleTests() {
+    	logger.info("Scale Tests");
+        logger.info("Showing the effect of the scale element, effectively moves the radix point");
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(0).width(10).offset(0).debugConvert(123.45678));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(1).width(10).offset(0).debugConvert(123.45678));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(2).width(10).offset(0).debugConvert(123.45678));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(3).width(10).offset(0).debugConvert(123.45678));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(4).width(10).offset(0).debugConvert(123.45678));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(5).width(10).offset(0).debugConvert(123.45678));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(6).width(10).offset(0).debugConvert(123.45678));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(-1).width(10).offset(0).debugConvert(123.45678));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(-2).width(10).offset(0).debugConvert(123.45678));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(-3).width(10).offset(0).debugConvert(123.45678));
+
+        logger.info(new RadixStringFormatter.Builder().radix(8).scale(0).width(10).offset(0).debugConvert(123.45678));
+        logger.info(new RadixStringFormatter.Builder().radix(8).scale(1).width(10).offset(0).debugConvert(123.45678));
+        logger.info(new RadixStringFormatter.Builder().radix(8).scale(2).width(10).offset(0).debugConvert(123.45678));
+        logger.info(new RadixStringFormatter.Builder().radix(8).scale(3).width(10).offset(0).debugConvert(123.45678));
+        logger.info(new RadixStringFormatter.Builder().radix(8).scale(4).width(10).offset(0).debugConvert(123.45678));
+        logger.info(new RadixStringFormatter.Builder().radix(8).scale(5).width(10).offset(0).debugConvert(123.45678));
+        logger.info(new RadixStringFormatter.Builder().radix(8).scale(6).width(10).offset(0).debugConvert(123.45678));
+        logger.info(new RadixStringFormatter.Builder().radix(8).scale(-1).width(10).offset(0).debugConvert(123.45678));
+        logger.info(new RadixStringFormatter.Builder().radix(8).scale(-2).width(10).offset(0).debugConvert(123.45678));
+        logger.info(new RadixStringFormatter.Builder().radix(8).scale(-3).width(10).offset(0).debugConvert(123.45678));
+
+        logger.info(new RadixStringFormatter.Builder().radix(4).scale(0).width(10).offset(0).debugConvert(123.45678));
+        logger.info(new RadixStringFormatter.Builder().radix(4).scale(1).width(10).offset(0).debugConvert(123.45678));
+        logger.info(new RadixStringFormatter.Builder().radix(4).scale(2).width(10).offset(0).debugConvert(123.45678));
+        logger.info(new RadixStringFormatter.Builder().radix(4).scale(3).width(10).offset(0).debugConvert(123.45678));
+        logger.info(new RadixStringFormatter.Builder().radix(4).scale(4).width(10).offset(0).debugConvert(123.45678));
+        logger.info(new RadixStringFormatter.Builder().radix(4).scale(5).width(10).offset(0).debugConvert(123.45678));
+        logger.info(new RadixStringFormatter.Builder().radix(4).scale(6).width(10).offset(0).debugConvert(123.45678));
+        logger.info(new RadixStringFormatter.Builder().radix(4).scale(-1).width(10).offset(0).debugConvert(123.45678));
+        logger.info(new RadixStringFormatter.Builder().radix(4).scale(-2).width(10).offset(0).debugConvert(123.45678));
+        logger.info(new RadixStringFormatter.Builder().radix(4).scale(-3).width(10).offset(0).debugConvert(123.45678));
+    }
+    
+    public void nothing() {
         boolean results = true;
         String converted;
         converted = new RadixStringFormatter.Builder().radix(10).scale(0).width(10).offset(0).convert(123.45678);
@@ -80,26 +117,48 @@ public class RadixStringFormatterTest {
  //       logger.info(new RadixStringFormatter.Builder().radix(4).scale(5).width(8).offset(0).debugConvert(123.00001));
     }
 
+    @Test
     public void convertBackTests() {
         logger.info("Showing the effect of the scale element, effectively moves the radix point");
-        logger.info(new RadixStringFormatter.Builder().radix(10).scale(0).width(10).offset(0).debugGetInner("00000000123"));
-        logger.info(new RadixStringFormatter.Builder().radix(10).scale(1).width(10).offset(0).debugGetInner("00000001234"));
-        logger.info(new RadixStringFormatter.Builder().radix(10).scale(2).width(10).offset(0).debugGetInner("00000012345"));
-        logger.info(new RadixStringFormatter.Builder().radix(10).scale(3).width(10).offset(0).debugGetInner("00000123456"));
-        logger.info(new RadixStringFormatter.Builder().radix(10).scale(4).width(10).offset(0).debugGetInner("00001234567"));
-        logger.info(new RadixStringFormatter.Builder().radix(10).scale(5).width(10).offset(0).debugGetInner("00012345678"));
-        logger.info(new RadixStringFormatter.Builder().radix(10).scale(6).width(10).offset(0).debugGetInner("00123456780"));
-        logger.info(new RadixStringFormatter.Builder().radix(10).scale(-1).width(10).offset(0).debugGetInner("00000000012"));
-        logger.info(new RadixStringFormatter.Builder().radix(10).scale(-2).width(10).offset(0).debugGetInner("00000000001"));
-        logger.info(new RadixStringFormatter.Builder().radix(10).scale(-3).width(10).offset(0).debugGetInner("00000000000"));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(0).width(11).offset(0).debugGetInner("00000000123"));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(1).width(11).offset(0).debugGetInner("00000001234"));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(2).width(11).offset(0).debugGetInner("00000012345"));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(3).width(11).offset(0).debugGetInner("00000123456"));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(4).width(11).offset(0).debugGetInner("00001234567"));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(5).width(11).offset(0).debugGetInner("00012345678"));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(6).width(11).offset(0).debugGetInner("00123456780"));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(-1).width(11).offset(0).debugGetInner("00000000012"));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(-2).width(11).offset(0).debugGetInner("00000000001"));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(-3).width(11).offset(0).debugGetInner("00000000000"));
 
         logger.info("Showing the effect of the factor element, effectively moves the radix point");
-        logger.info(new RadixStringFormatter.Builder().radix(10).scale(0).width(10).offset(0).debugGetInner("00000000123"));
-        logger.info(new RadixStringFormatter.Builder().radix(10).scale(0).width(10).offset(0).debugGetInner("0000000012"));
-        logger.info(new RadixStringFormatter.Builder().radix(10).scale(0).width(10).offset(0).debugGetInner("000000001"));
-        logger.info(new RadixStringFormatter.Builder().radix(10).scale(0).width(10).offset(0).debugGetInner("00000000"));
-        logger.info(new RadixStringFormatter.Builder().radix(10).scale(0).width(10).offset(0).debugGetInner("0000000"));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(0).width(11).offset(0).debugGetInner("00000000123"));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(0).width(11).offset(0).debugGetInner("0000000012"));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(0).width(11).offset(0).debugGetInner("000000001"));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(0).width(11).offset(0).debugGetInner("00000000"));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(0).width(11).offset(0).debugGetInner("0000000"));
 
+    }
+    
+    @Test
+    public void moreTests() {
+        logger.info("Looking at how the range changes for different settings");
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(5).width(8).offset(0).debugGetInner(""));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(5).width(8).offset(0).debugGetOuter(""));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(5).width(8).offset(0).debugGetInner("0"));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(5).width(8).offset(0).debugGetOuter("0"));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(5).width(8).offset(0).debugGetInner("1"));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(5).width(8).offset(0).debugGetOuter("1"));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(5).width(8).offset(0).debugGetInner("9"));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(5).width(8).offset(0).debugGetOuter("9"));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(5).width(8).offset(0).debugGetInner("00"));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(5).width(8).offset(0).debugGetOuter("00"));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(5).width(8).offset(0).debugGetInner("000"));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(5).width(8).offset(0).debugGetOuter("000"));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(5).width(8).offset(0).debugGetInner("0000"));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(5).width(8).offset(0).debugGetOuter("0000"));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(5).width(8).offset(0).debugGetInner("000.0"));
+        logger.info(new RadixStringFormatter.Builder().radix(10).scale(5).width(8).offset(0).debugGetOuter("000.0"));
     }
 
     @Test

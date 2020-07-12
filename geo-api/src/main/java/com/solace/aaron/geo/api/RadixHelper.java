@@ -7,7 +7,15 @@ import java.io.InputStreamReader;
 /**
  * This class will help decide what values you may want to use for the width, scale, etc. for a particular range
  * of numbers and given radix.
+ * 
+ * Super useful!  Use this first.
+ * 
+ * Some good examples would be:
+ * latitude: radix 10, width 7, scale 5    (1.11m resolution)
+ *           radix 4,  width 12, scale 8   (1.70m resolution)
  *
+ * longitude: radix 10, width 8, scale 5
+ *            radix  4, width 12, scale 8
  */
 public class RadixHelper {
     

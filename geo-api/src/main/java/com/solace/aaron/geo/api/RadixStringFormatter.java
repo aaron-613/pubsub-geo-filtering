@@ -7,8 +7,9 @@ package com.solace.aaron.geo.api;
 /**
  * <p>Let's define some terms used throughout these classes.</p>
  * <ul>
- * <li><b>width</b>: (int &gt; 0) this is the number of digits required to the <i>left</i> of the radix point.
- * It is determined by the total range of values required to be represented.  E.g.:
+ * <li><b>width</b>: (int &gt; 0) this is the total number of digit places.
+ * It is determined by: a) the total range of values required to be represented; and
+ * b) the required precision. E.g.:
  * <ul>
  * <li>For decimal values in the range <code>[-180,+180]</code>: width == 3</li>
  * <li>For hex values in the range <code>[-7f,+ff]</code> (decimal <code>[-127,+255]</code>): width == 2</li>
@@ -74,14 +75,14 @@ public class RadixStringFormatter implements GeoStringFormatter {
      * and 3 ints in a row, so this makes it easier.</p>
      * <p>Default values:
      * <ul>
-     * <li>val = 0</li>
      * <li>radix = 10</li>
-     * <li>width = 1</li>
-     * <li>factor = 0</li>
+     * <li>width = 10</li>
+     * <li>scale = 4</li>
+     * <li>offset = 0</li>
      * </ul>
      *
      */
-    static class Builder {
+    public static class Builder {
         
         private int radix = 10;
         private int width = 10;
@@ -90,7 +91,7 @@ public class RadixStringFormatter implements GeoStringFormatter {
         
         // default constructor
         
-        Builder radix(int radix) {
+        public Builder radix(int radix) {
             if (radix <= 1 || radix > 36) {
                 throw new IllegalArgumentException(String.format("Invalid value of radix (%d), must be in [2..36]",radix));
             }
@@ -98,7 +99,7 @@ public class RadixStringFormatter implements GeoStringFormatter {
             return this;
         }
         
-        Builder width(int width) {
+        public Builder width(int width) {
             if (width <= 0 || width > 64) {
                 throw new IllegalArgumentException(String.format("Invalid value of width (%d), must be in [1..64]",width));
             }
@@ -106,17 +107,17 @@ public class RadixStringFormatter implements GeoStringFormatter {
             return this;
         }
         
-        Builder scale(int scale) {
+        public Builder scale(int scale) {
             this.scale = scale;
             return this;
         }
 
-        Builder offset(int offset) {
+        public Builder offset(int offset) {
             this.offset = offset;
             return this;
         }
         
-        RadixStringFormatter build() {
+        public RadixStringFormatter build() {
             return new RadixStringFormatter(radix,width,scale,offset);
         }
         
@@ -218,7 +219,7 @@ public class RadixStringFormatter implements GeoStringFormatter {
             long valShift = (long)Math.pow(radix,width-radixString.length());  // width always > radixString.length(), so positive
             return ((valLong * valShift) - offsetMultiplier) / multiplier;
         } catch (NumberFormatException e) {
-            throw e;
+            throw new IllegalArgumentException("Couldn't parse a Long, are you sure this string is correct?",e);
         }
     }
 
@@ -239,7 +240,7 @@ public class RadixStringFormatter implements GeoStringFormatter {
             long valo = (long)Math.pow(radix,width-radixString.length());  // width always > radixString.length(), so positive
             return ((vall * valo) - offsetMultiplier) / multiplier;
         } catch (NumberFormatException e) {  // if there were weird chars in the radixString
-            throw e;
+            throw new IllegalArgumentException("Couldn't parse a Long, are you sure this string is correct?",e);
         }
     }
 

@@ -9,9 +9,9 @@ configure(subprojects.findAll { it.name.startsWith('geo') }) {
 
     dependencies {
         // for my various geometric calculations
-        implementation 'org.locationtech.jts:jts:1.16.0'
-        implementation 'org.locationtech.jts.io:jts-io-common:1.16.0'
-        implementation group: 'math.geom2d', name: 'javaGeom', version: '0.11.1'
+        implementation 'org.locationtech.jts:jts:1.17.0'
+        implementation 'org.locationtech.jts.io:jts-io-common:1.17.0'
+        //implementation group: 'math.geom2d', name: 'javaGeom', version: '0.11.1'
 
         // new an improved logging framework, no more slf4j
         implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.11.1'

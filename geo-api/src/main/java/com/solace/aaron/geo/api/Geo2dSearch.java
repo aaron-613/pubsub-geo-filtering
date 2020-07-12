@@ -75,8 +75,8 @@ public class Geo2dSearch {
         
         // start with the "global" grid
         RadixGrid startNode = new RadixGrid(targets,
-                new RadixRange(engine.getXStringFormatter()),
-                new RadixRange(engine.getYStringFormatter())
+                new Range(engine.getXStringFormatter()),
+                new Range(engine.getYStringFormatter())
 //                engine.getXFixedScale()-engine.getXFixedWidth(),
 //                engine.getYFixedScale()-engine.getYFixedWidth()
                 );
@@ -404,7 +404,7 @@ public class Geo2dSearch {
 
         /**
          * Helper function to put the whole subscription string together, including wildcard chars, but not trailing '/' char
-         */ // e.g. -35.12*/_93.381*
+         */ // e.g. "-35.12*/_93.381*"
         private String buildTopicSubscription() {
             StringBuilder sb = new StringBuilder();
 //            sb.append(xStringFormatter.convert(innerX,quadrant.xNegativeModifier<0,xFixedScale-xFactor)).append("*/");
@@ -424,7 +424,7 @@ public class Geo2dSearch {
             return grid;
         }
         
-        Polygon buildGridPolygon() { //boolean slightlyInflate) {
+        Polygon buildGridPolygon() {
             Coordinate[] square = new Coordinate[5];
             square[0] = new Coordinate(xRange.getInner(),yRange.getInner());
             square[1] = new Coordinate(xRange.getInner(),yRange.getOuter());
@@ -438,8 +438,8 @@ public class Geo2dSearch {
 
         private RadixGrid parent = null;
         private final Geometry[] trimmedTargets = new Geometry[Geo2dSearch.this.targets.length];
-        private final RadixRange xRange;
-        private final RadixRange yRange;
+        private final Range xRange;
+        private final Range yRange;
 //        private final int xFactor; // this is essentially the depth... level = 0 -> no decimal places, lev 1...
 //        private final int yFactor;
         private final Polygon gridPolygon;
@@ -451,7 +451,7 @@ public class Geo2dSearch {
         private List<TargetObject> sortedTargets = new ArrayList<>();
 
 
-        private RadixGrid(RadixGrid parent, RadixRange xRange, RadixRange yRange) { //, int xFactor, int yFactor) {
+        private RadixGrid(RadixGrid parent, Range xRange, Range yRange) { //, int xFactor, int yFactor) {
             this(parent.trimmedTargets,xRange,yRange);//,xFactor,yFactor);
             this.parent = parent;
         }
@@ -533,7 +533,7 @@ public class Geo2dSearch {
         /**
          * This constructor should only be used directly by parent GridContainer... everything else internally should use the one that includes 'parent' so it maintains a link
          */
-        private RadixGrid(Geometry[] parentsIntersectedTargets, RadixRange xRange, RadixRange yRange) {
+        private RadixGrid(Geometry[] parentsIntersectedTargets, Range xRange, Range yRange) {
             this.xRange = xRange;
             this.yRange = yRange;
             this.gridPolygon = buildGridPolygon();
@@ -616,13 +616,6 @@ public class Geo2dSearch {
             } else if (yRange.getWidth() == engine.getYMaxWidth()) {
                 stripeDirection = StripeDirection.VERTICAL;
             }
-//            if (Math.abs(innerX - 0.5) < 0.00001 && Math.abs(innerY - 1.5) < 0.0001) {
-            if (xRange.getInner() == 0 && yRange.getInner() == 3.5) {
-                System.out.print("");
-            }
-            if (buildTopicSubscription().equals("0000001110222*/000040330*")) {
-                System.out.print("");
-            }
             
             // temp objects... used to potentially split both horizontally and vertically and see how it goes
             List<RadixGrid> vertKids = new ArrayList<>(engine.getRadix());
@@ -634,7 +627,7 @@ public class Geo2dSearch {
             int horizFullCoverageKidCount = 0;
             Set<Integer> horizIndexes = new HashSet<>();
             if (stripeDirection != StripeDirection.HORIZONTAL) {  // so, either TBD (usual) or vertical
-                for (RadixRange child : xRange.getChildren()) {
+                for (Range child : xRange.buildChildren()) {
                     RadixGrid kid = new RadixGrid(this,child,yRange);
                     if (kid.intersects()) {
                         vertKids.add(kid);
@@ -647,7 +640,7 @@ public class Geo2dSearch {
                 }
             }
             if (stripeDirection != StripeDirection.VERTICAL) {  // either TBD or horizontal
-                for (RadixRange child : yRange.getChildren()) {
+                for (Range child : yRange.buildChildren()) {
                     RadixGrid kid = new RadixGrid(this,xRange,child);
                     if (kid.intersects()) {
                         horizKids.add(kid);
@@ -724,11 +717,11 @@ public class Geo2dSearch {
         }
         
         private int getXFactor() {
-            return xRange.getWidth()-engine.getXShift();
+            return xRange.getWidth() - engine.getXShift();
         }
         
         private int getYFactor() {
-            return yRange.getWidth()-engine.getYShift();
+            return yRange.getWidth() - engine.getYShift();
         }
 
         @Override
@@ -763,7 +756,7 @@ public class Geo2dSearch {
 //            return staticCoverageRatio > 0;
         }
 
-/*        private String debugDraw() {
+        String debugDraw() {
             StringBuilder sb = new StringBuilder("+");
             for (int i=0;i<engine.getRadix();i++) {
                 sb.append("--");
@@ -773,9 +766,8 @@ public class Geo2dSearch {
                 sb.append('|');
                 for (int x=0;x<engine.getRadix();x++) {
                     RadixGrid temp = new RadixGrid(this,
-                            new RadixRange(engine.getXStringFormatter(),xRange.getVal()+RadixStringFormatter.radixCharConvert(x)),
-                            new RadixRange(engine.getYStringFormatter(),yRange.getVal()+RadixStringFormatter.radixCharConvert(y)),
-                            xFactor-engine.getXFixedScale()+1,yFactor-engine.getYFixedScale()+1);
+                            new Range(engine.getXStringFormatter(),xRange.getVal()+RadixStringFormatter.radixCharConvert(x)),
+                            new Range(engine.getYStringFormatter(),yRange.getVal()+RadixStringFormatter.radixCharConvert(y)));
                     if (temp.intersects()) sb.append("()");
                     else sb.append("  ");
                 }
@@ -797,7 +789,7 @@ public class Geo2dSearch {
             sb.append(String.format("> %s%n%s",toString(),debugDraw()));
             return sb.toString();
         }
-*/
+
         private void splitUnsplitParent() {
             logger.debug("Splitting an unsplit parent");
 //            if (logger.isDebugEnabled()) {

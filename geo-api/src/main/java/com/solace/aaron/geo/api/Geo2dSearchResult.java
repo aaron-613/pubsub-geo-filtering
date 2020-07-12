@@ -20,23 +20,30 @@ public class Geo2dSearchResult {
     private final RadixGrid rootNode;
     private final List<RadixGrid> orderedSplitGridList;
     
-    /*
-     * Package visibility
-     */
+    // package visibility
     Geo2dSearchResult(Geometry[] targets, RadixGrid rootNode, List<RadixGrid> orderedSplitGridList) {
         this.targets = Arrays.asList(targets);
         this.rootNode = rootNode;
         this.orderedSplitGridList = orderedSplitGridList;
     }
-    
+
+    /**
+     * Returns the original Geometry targets that were used
+     */
     public List<Geometry> getTargets() {
         return targets;
     }
-    
+
+    /**
+     * Returns the List of subscriptions, format "xxxxx/yyyyyy/" for each target.
+     */
     public List<List<String>> getSubs() {
         return rootNode.getSubs();
     }
 
+    /**
+     * Returns a List of Rect objects representing the subscriptions for each target.
+     */
     public List<List<Rect>> getSquares() {
         return rootNode.getSquares();
     }
