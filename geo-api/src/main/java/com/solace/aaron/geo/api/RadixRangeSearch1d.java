@@ -75,7 +75,7 @@ public class RadixRangeSearch1d {
         this.radix = radix;
         this.xScale = xScale;  // what is the offset, for the various later calculations?
 //        this.xStringFormatter = new RadixStringFormatter(radix, xPadding, xScale, offset);
-        this.xStringFormatter = new RadixStringFormatter.Builder().radix(radix).width(xPadding).scale(xScale).offset(offset).build();
+        this.xStringFormatter = new RadixStringFormatter.RadixBuilder().radix(radix).width(xPadding).scale(xScale).offset(offset).build();
         for (Hemisphere hemi : Hemisphere.values()) {  // up to 4 possible combinations
             RadixSegment segment = new RadixSegment(Collections.singletonList(target),hemi,0,xScale-xPadding);
             if (segment.intersects()) {

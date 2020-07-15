@@ -19,7 +19,7 @@ public class RadixRangeSerachTests {
     public void newNegativeRangeTests() {
         // testing the fact that the range could have a negative
         System.out.println("=== newNegativeRangeTests ===");
-        RadixStringFormatter rsf = new RadixStringFormatter.Builder().radix(10).scale(5).width(8).offset(0).build();
+        RadixStringFormatter rsf = new RadixStringFormatter.RadixBuilder().radix(10).scale(5).width(8).offset(0).build();
         System.out.println(rsf.getInner("01"));  // 10
         System.out.println(rsf.getOuter("01"));  // 20
         System.out.println(rsf.getInner("00"));  // 0
@@ -71,7 +71,7 @@ public class RadixRangeSerachTests {
     public void newNegativeRangeTestsBase4() {
         // testing the fact that the range could have a negative
         System.out.println("=== newNegativeRangeTests Base 4 ===");
-        RadixStringFormatter rsf = new RadixStringFormatter.Builder().radix(4).scale(5).width(8).offset(0).build();
+        RadixStringFormatter rsf = new RadixStringFormatter.RadixBuilder().radix(4).scale(5).width(8).offset(0).build();
         System.out.println(rsf.getInner("01"));  // 10
         System.out.println(rsf.getOuter("01"));  // 20
         System.out.println(rsf.getInner("00"));  // 0
@@ -109,7 +109,7 @@ public class RadixRangeSerachTests {
         System.out.println(rsf.getOuter("-3"));  // 80 should be -100
         System.out.println(rsf.getOuter("033"));
         System.out.println(rsf.getOuter("-33"));  // 38
-        System.out.println(rsf.getOuter("-3a3"));  // 33.8
+        System.out.println(rsf.getOuter("-333"));  // 33.8
         System.out.println(rsf.getOuter("-3333"));  // 33.8
         System.out.println(rsf.getOuter("-33333"));  
         //System.out.println(rsf.getOuter("-3333333"));  
@@ -122,7 +122,7 @@ public class RadixRangeSerachTests {
 
     public void testSearchWorks() {
 
-        RadixStringFormatter rsf = new RadixStringFormatter.Builder().radix(10).scale(4).width(7).offset(90).build();
+        RadixStringFormatter rsf = new RadixStringFormatter.RadixBuilder().radix(10).scale(4).width(7).offset(90).build();
 //        System.out.println("0.3");
 //        System.out.println(rsf.convert(0.3999999));
 //        System.out.println("0003");

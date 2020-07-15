@@ -44,8 +44,8 @@ public class Geo2dSearchEngine {
         this.yWidth = yWidth;
 //        this.xStringFormatter = new RadixStringFormatter(radix, xWidth, scale, xOffset);
 //        this.yStringFormatter = new RadixStringFormatter(radix, yWidth, scale, yOffset);
-        this.xStringFormatter = new RadixStringFormatter.Builder().radix(radix).width(xWidth).scale(scale).offset(xOffset).build();
-        this.yStringFormatter = new RadixStringFormatter.Builder().radix(radix).width(yWidth).scale(scale).offset(yOffset).build();
+        this.xStringFormatter = new RadixStringFormatter.RadixBuilder().radix(radix).width(xWidth).scale(scale).offset(xOffset).build();
+        this.yStringFormatter = new RadixStringFormatter.RadixBuilder().radix(radix).width(yWidth).scale(scale).offset(yOffset).build();
     }
     
     public int getRadix() {

@@ -76,13 +76,13 @@ public class RadixStringFormatter implements GeoStringFormatter {
      * <p>Default values:
      * <ul>
      * <li>radix = 10</li>
-     * <li>width = 10</li>
-     * <li>scale = 4</li>
+     * <li>width = 8</li>
+     * <li>scale = 5</li>
      * <li>offset = 0</li>
      * </ul>
      *
      */
-    public static class Builder {
+    public static class RadixBuilder {
         
         private int radix = 10;
         private int width = 10;
@@ -91,7 +91,7 @@ public class RadixStringFormatter implements GeoStringFormatter {
         
         // default constructor
         
-        public Builder radix(int radix) {
+        public RadixBuilder radix(int radix) {
             if (radix <= 1 || radix > 36) {
                 throw new IllegalArgumentException(String.format("Invalid value of radix (%d), must be in [2..36]",radix));
             }
@@ -99,7 +99,7 @@ public class RadixStringFormatter implements GeoStringFormatter {
             return this;
         }
         
-        public Builder width(int width) {
+        public RadixBuilder width(int width) {
             if (width <= 0 || width > 64) {
                 throw new IllegalArgumentException(String.format("Invalid value of width (%d), must be in [1..64]",width));
             }
@@ -107,12 +107,12 @@ public class RadixStringFormatter implements GeoStringFormatter {
             return this;
         }
         
-        public Builder scale(int scale) {
+        public RadixBuilder scale(int scale) {
             this.scale = scale;
             return this;
         }
 
-        public Builder offset(int offset) {
+        public RadixBuilder offset(int offset) {
             this.offset = offset;
             return this;
         }
@@ -120,8 +120,6 @@ public class RadixStringFormatter implements GeoStringFormatter {
         public RadixStringFormatter build() {
             return new RadixStringFormatter(radix,width,scale,offset,false);
         }
-        
-        
         
         String convert(double val) {
             return new RadixStringFormatter(radix,width,scale,offset,false).convert(val);
@@ -142,15 +140,15 @@ public class RadixStringFormatter implements GeoStringFormatter {
         
         String debugConvert(double val) {
             RadixStringFormatter formatter = build();
-            return String.format("Convert %s,  val=%f ==> '%s'", formatter, val, formatter.convert(val));
+            return String.format("%s, conver() val=%f ==> '%s'", formatter, val, formatter.convert(val));
         }
 
         String debugGetInner(String radixString) {
-            return String.format("getInner %s,  radixString='%s' ==> %f", toString(), radixString, getInner(radixString));
+            return String.format("%s, getInner() radixString='%s' ==> %f", toString(), radixString, getInner(radixString));
         }
 
         String debugGetOuter(String radixString) {
-            return String.format("getOuter %s,  radixString='%s' ==> %s", toString(), radixString, Double.toString(getOuter(radixString)));
+            return String.format("%s, getOuter() radixString='%s' ==> %s", toString(), radixString, Double.toString(getOuter(radixString)));
         }
     }
     // END OF HELPER /////////////////////////////////////////////////////////////////////
@@ -162,10 +160,10 @@ public class RadixStringFormatter implements GeoStringFormatter {
     private final int radix;
     private final int width;
     private final int scale;
-    private final int offset;
-    private final double multiplier;
-    private final double offsetMultiplier;
-    private final boolean includeDecimal;
+    private final int offset;  // how much do we "shift" the values up or down?
+    private final double multiplier;  // derived from the scale... if base10, scale=3, then multiplier==1000
+    private final double offsetMultiplier;  // since we work in "shifted" values for accuracy, need to shift the offset too
+    private final boolean includeDecimal;  // only used in regular base10 notation, although could still use radix=10 to disable
 
     /**
      * Rather than using the defined static methods, this allows you to instantiate an object that can be reused.
@@ -295,13 +293,15 @@ public class RadixStringFormatter implements GeoStringFormatter {
     }
     
     /**
-     * Will assert that the value of 'val' can be properly represented by this Formatter's configuration. 
-     * @param val
+     * Will provide the formatted GeoString by converting the double 'realValue' 
+     * @param realValue a double hopefully within the range of the formatter
      * @return
      */
     @Override
-    public String convert(final double val) {
-        final long shift = (long)(val*multiplier) + (long)offsetMultiplier;  // so, if radix=10, scale=3, multiplier=1000, offset=0, 123.456 --> 123456
+    public String convert(final double realValue) {
+        assert realValue <= getMaxValue();
+        assert realValue >= getMinValue();
+        final long shift = (long)(realValue*multiplier) + (long)offsetMultiplier;  // so, if radix=10, scale=3, multiplier=1000, offset=0, 123.456 --> 123456
         try {
 //            if (shift < 0) {
 //                String errMsg = String.format("%s underflow error: val=%f < MIN=%f (shift=%d) : %s",this.getClass().getSimpleName(),val,getInner(""),shift,this.toString());
@@ -309,7 +309,7 @@ public class RadixStringFormatter implements GeoStringFormatter {
 //            }
             String converted = Long.toString(shift,radix);
             if (converted.length() > width) {
-                String errMsg = String.format("%s overflow error: val=%f >= MAX=%f (length=%d) : %s",this.getClass().getSimpleName(),val,getOuter(""),converted.length(),this.toString());
+                String errMsg = String.format("%s overflow error: val=%f >= MAX=%f (length=%d) : %s",this.getClass().getSimpleName(),realValue,getOuter(""),converted.length(),this.toString());
                 throw new IllegalArgumentException(errMsg);
             }
             // ok, so now we make the String to return
