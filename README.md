@@ -41,11 +41,8 @@ Finally getting my geo-filtering code posted up to GitHub.  Will document more l
 
 Significant changes to the algorithm have been made to greatly simplify it and improve its usability.
 
+## Improvments made during the process
 
-# Live Demo
+1. Moved from Decimal base 10 to any radix, base n, where n=[2,36].
+1. Something else
 
-https://sg.solace.com/bus
-
-# Papers
-
-https://worldcomp-proceedings.com/proc/p2016/ICM3967.pdf
