@@ -35,7 +35,7 @@ public class Geo2dSearchResult {
     }
 
     /**
-     * Returns the List of subscriptions, format "xxxxx/yyyyyy/" for each target.
+     * Returns the List of subscriptions, format <code>"xxxxx* /yyyyyy*"</code> (no space) for each target.
      */
     public List<List<String>> getSubs() {
         return rootNode.getSubs();
@@ -65,9 +65,12 @@ public class Geo2dSearchResult {
     public static class IncrementalSearchResult {
         
         /**
-         * A super nested list, defining when each was added, and wfor which target: [loop][target][childRect][coords]
+         * A super nested list, defining when each was added, and for which target: [loop][target][childRect][coords]
          */
         public List<List<List<List<Double>>>> added = new ArrayList<>();  // each square that was added each loop, and for which target (loop, target, childRect)
+        /**
+         * For each loop, only a single rectangle can be removed (i.e. split), 
+         */
         public List<List<Integer>> removed = new ArrayList<>();  // so for loop 0, nothing was removed, for loop 1 [x,0,0] was removed, for loop 2 [y,1,0] was removed
     }
     

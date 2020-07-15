@@ -4,9 +4,6 @@
 
 package com.solace.aaron.geo.api;
 
-import com.solace.aaron.geo.api.RadixStringFormatter.Builder;
-import com.sun.tools.jdeps.InverseDepsAnalyzer;
-
 public class NormalDecimalStringFormatter implements GeoStringFormatter {
 
     
@@ -238,12 +235,12 @@ public class NormalDecimalStringFormatter implements GeoStringFormatter {
         int factor = width - decimalString.length()-1 - scale;  // the max width, less the scale (shift of decimal point), less num chars in string
         boolean isNegative = decimalString.charAt(0) == '-';
         if (decimalString.length() == 1) {
-            return Math.pow(10,factor) + offset;  // empty string, then whatever the max is
+            return Math.pow(10,factor);// + offset;  // empty string, then whatever the max is
         }
         try {
             long vall = Long.parseLong(decimalString,10) + 1;  // always positive
             long valo = (long)Math.pow(10,width-decimalString.length());  // width always > decimalString.length(), so positive
-            return ((vall * valo) - offsetMultiplier) / multiplier;
+            return ((vall * valo));// - offsetMultiplier) / multiplier;
         } catch (NumberFormatException e) {  // if there were weird chars in the decimalString
             throw new IllegalArgumentException("Couldn't parse a Double, are you sure this string is correct?",e);
         }
@@ -272,7 +269,8 @@ public class NormalDecimalStringFormatter implements GeoStringFormatter {
      */
     @Override
     public String convert(final double val) {
-        final long shift = (long)(val*multiplier) + (long)offsetMultiplier;  // so, if radix=10, scale=3, multiplier=1000, offset=0, 123.456 --> 123456
+        return "";
+/*        final long shift = (long)(val*multiplier) + (long)offsetMultiplier;  // so, if radix=10, scale=3, multiplier=1000, offset=0, 123.456 --> 123456
         try {
             if (shift < 0) {
                 String errMsg = String.format("%s underflow error: val=%f < MIN=%f (shift=%d) : %s",this.getClass().getSimpleName(),val,getInner(""),shift,this.toString());
@@ -299,6 +297,6 @@ public class NormalDecimalStringFormatter implements GeoStringFormatter {
             System.err.println(e);
             throw e;
         }
-    }
+*/    }
 
 }

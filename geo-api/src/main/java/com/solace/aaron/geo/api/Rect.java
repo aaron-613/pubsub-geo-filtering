@@ -24,6 +24,9 @@ public final class Rect {
         this.y2 = y2;
     }
     
+    /**
+     * Returns a List of Doubles: x1,y1,x2,y2
+     */
     public List<Double> asList() {
         List<Double> returnList = new ArrayList<>();
         returnList.add(x1);

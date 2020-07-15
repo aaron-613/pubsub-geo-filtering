@@ -118,19 +118,21 @@ public class RadixStringFormatter implements GeoStringFormatter {
         }
         
         public RadixStringFormatter build() {
-            return new RadixStringFormatter(radix,width,scale,offset);
+            return new RadixStringFormatter(radix,width,scale,offset,false);
         }
         
+        
+        
         String convert(double val) {
-            return new RadixStringFormatter(radix,width,scale,offset).convert(val);
+            return new RadixStringFormatter(radix,width,scale,offset,false).convert(val);
         }
         
         public double getInner(String val) {
-            return new RadixStringFormatter(radix,width,scale,offset).getInner(val);
+            return new RadixStringFormatter(radix,width,scale,offset,false).getInner(val);
         }
 
         public double getOuter(String val) {
-            return new RadixStringFormatter(radix,width,scale,offset).getOuter(val);
+            return new RadixStringFormatter(radix,width,scale,offset,false).getOuter(val);
         }
 
         @Override
@@ -154,6 +156,27 @@ public class RadixStringFormatter implements GeoStringFormatter {
     // END OF HELPER /////////////////////////////////////////////////////////////////////
 
     
+    /**
+     * Forces radix = 10, offset = 0, 
+     *
+     */
+    public static class DecimalBuilder {
+        
+        private int radix = 10;
+        private int width = 10;
+        private int scale = 4;
+        private int offset = 0;
+        
+        private int numDecimalPlaces = 5;
+        private int numDigitsLeftOfDecimal = 3;
+        
+        
+        
+        
+    }    
+    
+    
+    
     
     private final int radix;
     private final int width;
@@ -161,7 +184,8 @@ public class RadixStringFormatter implements GeoStringFormatter {
     private final int offset;
     private final double multiplier;
     private final double offsetMultiplier;
-    
+    private final boolean includeDecimal;
+
     /**
      * Rather than using the defined static methods, this allows you to instantiate an object that can be reused.
      * Typically within a system, the radix, factor, and width are fixed, so let's just lock them in for ease of use.
@@ -170,7 +194,7 @@ public class RadixStringFormatter implements GeoStringFormatter {
      * @param width How many total characters long is the generated radix string? E.g. if radix=10, and scale=2, and width=5, then 12.34 == '01234'
      * @param offset If lowest value isn't 0, how much to shift by?  E.g. -180 for longitude, -90 for latitude 
      */
-    private RadixStringFormatter(int radix, int width, int scale, int offset) {
+    private RadixStringFormatter(int radix, int width, int scale, int offset, boolean includeDecimal) {
         this.radix = radix;
         this.scale = scale;
         this.multiplier = Math.pow(radix, scale);
@@ -179,7 +203,16 @@ public class RadixStringFormatter implements GeoStringFormatter {
         this.offsetMultiplier = -offset * Math.pow(radix,scale);
         assert width > 0 : "width must be > 0, but width=="+width;
         assert radix >= 2 && radix <= 36 : "radix must be in [2,36], but radix=="+radix;
+        this.includeDecimal = includeDecimal;
+        if (this.includeDecimal) {
+            assert radix == 10;
+        }
     }
+    
+    public static RadixStringFormatter buildRegularDecimalFormatter(int width, int scale) {
+        return new RadixStringFormatter(10,width,scale,0,true);
+    }
+
     
     @Override
     public int getRadix() {
@@ -198,6 +231,15 @@ public class RadixStringFormatter implements GeoStringFormatter {
         return offset;
     }
     
+    public double getMinValue() {
+        return getInner("");
+    }
+    
+    public double getMaxValue() {
+        return getOuter("");
+    }
+    
+    
     @Override
     public String toString() {
         return String.format("[%f..%f), radix=%d, width=%d, scale=%d, offset=%d",getInner(""),getOuter(""),radix,width,scale,offset);
@@ -208,14 +250,19 @@ public class RadixStringFormatter implements GeoStringFormatter {
      */
     @Override
     public double getInner(final String radixString) {
-        if (radixString.length() == 0) {
-            return offset;
+        if (radixString.isEmpty()) {  // special case
+            // So, it used to return just "offset", but now that we're including negative numbers,
+            // we need to return the outer for the 1st level.
+            // getOuter("0") == getOuter("-9") for decimal or ("-1") for binary
+            return getOuter("0") * -1 + offset;
         } else if (radixString.length() > width) {
             throw new IllegalArgumentException(String.format("radixString '%s' has length %d, but max width==%d : %s",radixString,radixString.length(),width,toString()));
+        } else if (radixString.length() == 1 && radixString.charAt(0) == '-') {  // can't parse with parseLong()
+            return offset;  // usually just 0
         }
         try {
             long valLong = Long.parseLong(radixString,radix);  // always positive
-            assert valLong >= 0;
+            //assert valLong >= 0;
             long valShift = (long)Math.pow(radix,width-radixString.length());  // width always > radixString.length(), so positive
             return ((valLong * valShift) - offsetMultiplier) / multiplier;
         } catch (NumberFormatException e) {
@@ -232,13 +279,19 @@ public class RadixStringFormatter implements GeoStringFormatter {
             throw new IllegalArgumentException(String.format("radixString '%s' has length %d, but max width==%d : %s",radixString,radixString.length(),width,toString()));
         }
         int factor = width - radixString.length() - scale;  // the max width, less the scale (shift of radix point), less num chars in string
-        if (radixString.length() == 0) {
+        if (radixString.isEmpty()) {
             return Math.pow(radix,factor) + offset;  // empty string, then whatever the max is
+        } else if (radixString.length() == 1 && radixString.charAt(0) == '-') {  // can't parse with parseLong()
+            return -1 * getOuter("0");
         }
         try {
-            long vall = Long.parseLong(radixString,radix) + 1;  // always positive
+            long vall = Math.abs(Long.parseLong(radixString,radix)) + 1;
             long valo = (long)Math.pow(radix,width-radixString.length());  // width always > radixString.length(), so positive
-            return ((vall * valo) - offsetMultiplier) / multiplier;
+            if (radixString.charAt(0) == '-') {  // is negative
+                return -1 * (((vall * valo) - offsetMultiplier) / multiplier);
+            } else {
+                return ((vall * valo) - offsetMultiplier) / multiplier;
+            }
         } catch (NumberFormatException e) {  // if there were weird chars in the radixString
             throw new IllegalArgumentException("Couldn't parse a Long, are you sure this string is correct?",e);
         }
@@ -269,27 +322,27 @@ public class RadixStringFormatter implements GeoStringFormatter {
     public String convert(final double val) {
         final long shift = (long)(val*multiplier) + (long)offsetMultiplier;  // so, if radix=10, scale=3, multiplier=1000, offset=0, 123.456 --> 123456
         try {
-            if (shift < 0) {
-                String errMsg = String.format("%s underflow error: val=%f < MIN=%f (shift=%d) : %s",this.getClass().getSimpleName(),val,getInner(""),shift,this.toString());
-                throw new IllegalArgumentException(errMsg);
-            }
+//            if (shift < 0) {
+//                String errMsg = String.format("%s underflow error: val=%f < MIN=%f (shift=%d) : %s",this.getClass().getSimpleName(),val,getInner(""),shift,this.toString());
+//                throw new IllegalArgumentException(errMsg);
+//            }
             String converted = Long.toString(shift,radix);
             if (converted.length() > width) {
                 String errMsg = String.format("%s overflow error: val=%f >= MAX=%f (length=%d) : %s",this.getClass().getSimpleName(),val,getOuter(""),converted.length(),this.toString());
                 throw new IllegalArgumentException(errMsg);
             }
             // ok, so now we make the String to return
-            char[] a = new char[width];               // first, get a char array big enough
-            converted.getChars(0,converted.length(),  // copy all of 'converted'
-                    a,                                // into char[] a
+            char[] charArray = new char[width];               // first, get a char array big enough
+            converted.getChars(0,converted.length(),  // copy all of 'converted' val String
+                    charArray,                        // into char[] charArray
                     width-converted.length());        // keeping it right-aligned
-            if (converted.length() < a.length) {  // now pad the beginning with 0s if need be
+            if (converted.length() < charArray.length) {  // now pad the beginning with 0s if need be
                 // ok, so width==5, length=3, need 2 extra 0's. Since there's an extra char for onlyAbs, start at index 1
-                for (int i=0;i<a.length-converted.length();i++) {
-                    a[i] = '0';
+                for (int i=0;i<charArray.length-converted.length();i++) {
+                    charArray[i] = '0';
                 }
             }
-            return new String(a);
+            return new String(charArray);
         } catch (Exception | Error e) {
             System.err.println(e);
             throw e;

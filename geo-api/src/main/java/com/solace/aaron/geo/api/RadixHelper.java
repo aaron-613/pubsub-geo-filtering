@@ -90,10 +90,10 @@ public class RadixHelper {
         finest = Double.parseDouble(reader.readLine());
 */        
         // longitude decimal degrees
-        radix = 4;
-        min = -180;
-        max = 180;
-        finest = 0.001;
+        radix = 10;
+        min = -90;
+        max = 90;
+        finest = 0.00001;
         
         // altitude in feet for commercial flights
         // https://en.wikipedia.org/wiki/Bar_Yehuda_Airfield
