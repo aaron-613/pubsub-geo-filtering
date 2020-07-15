@@ -156,25 +156,6 @@ public class RadixStringFormatter implements GeoStringFormatter {
     // END OF HELPER /////////////////////////////////////////////////////////////////////
 
     
-    /**
-     * Forces radix = 10, offset = 0, 
-     *
-     */
-    public static class DecimalBuilder {
-        
-        private int radix = 10;
-        private int width = 10;
-        private int scale = 4;
-        private int offset = 0;
-        
-        private int numDecimalPlaces = 5;
-        private int numDigitsLeftOfDecimal = 3;
-        
-        
-        
-        
-    }    
-    
     
     
     
