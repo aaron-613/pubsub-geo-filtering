@@ -17,7 +17,7 @@ import java.io.InputStreamReader;
  * longitude: radix 10, width 8, scale 5
  *            radix  4, width 12, scale 8
  */
-public class RadixHelper {
+public class HelpChooseCorrectRadixValues {
     
     
     
@@ -167,13 +167,13 @@ public class RadixHelper {
         
 //        System.exit(0);
         
-//        higherAcc(102000, 100);
-//        System.out.println();
-//        System.out.println();
-//        higherAcc(359, 1.1);
-//        System.out.println();
-//        System.out.println();
-//        printTableMetres(360, 50);
+        higherAcc(102000, 100);
+        System.out.println();
+        System.out.println();
+        higherAcc(359, 1.1);
+        System.out.println();
+        System.out.println();
+        printTableMetres(360, 50);
     }
 
     
