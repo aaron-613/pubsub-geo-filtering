@@ -11,3 +11,10 @@ apply plugin: 'java-library'
 apply plugin: "eclipse"
 
 
+checkstyle {
+    // Go to the Google Checks link above and paste its
+    // contents into checkstyle.xml
+    config = rootProject.resources.text.fromFile('buildConfig/checkstyle/checkstyle.xml')
+    toolVersion '8.34'
+
+}

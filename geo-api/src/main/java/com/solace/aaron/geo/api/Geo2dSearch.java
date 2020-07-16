@@ -766,8 +766,8 @@ public class Geo2dSearch {
                 sb.append('|');
                 for (int x=0;x<engine.getRadix();x++) {
                     RadixGrid temp = new RadixGrid(this,
-                            new Range(engine.getXStringFormatter(),xRange.getVal()+RadixStringFormatter.radixCharConvert(x)),
-                            new Range(engine.getYStringFormatter(),yRange.getVal()+RadixStringFormatter.radixCharConvert(y)));
+                            new Range(engine.getXStringFormatter(),xRange.getVal()+GeoStringFormatter.radixCharConvert(x)),
+                            new Range(engine.getYStringFormatter(),yRange.getVal()+GeoStringFormatter.radixCharConvert(y)));
                     if (temp.intersects()) sb.append("()");
                     else sb.append("  ");
                 }

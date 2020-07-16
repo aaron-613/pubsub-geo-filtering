@@ -59,7 +59,7 @@ public class RadixRangeSearch1d {
     
     private final int xScale;
     
-    private final RadixStringFormatter xStringFormatter;
+    private final GeoStringFormatter xStringFormatter;
     
     /** The list of all segments/squares that are considered for splitting.  This will be sorted each iteration, and the top one will be split. **/
     private final List<RadixSegment> splitContenders = new ArrayList<RadixSegment>();  // can't use a PriorityQueue as the sort value for items changes after they've been inserted
@@ -75,7 +75,7 @@ public class RadixRangeSearch1d {
         this.radix = radix;
         this.xScale = xScale;  // what is the offset, for the various later calculations?
 //        this.xStringFormatter = new RadixStringFormatter(radix, xPadding, xScale, offset);
-        this.xStringFormatter = new RadixStringFormatter.RadixBuilder().radix(radix).width(xPadding).scale(xScale).offset(offset).build();
+        this.xStringFormatter = new GeoStringFormatter.RadixBuilder().radix(radix).width(xPadding).scale(xScale).offset(offset).build();
         for (Hemisphere hemi : Hemisphere.values()) {  // up to 4 possible combinations
             RadixSegment segment = new RadixSegment(Collections.singletonList(target),hemi,0,xScale-xPadding);
             if (segment.intersects()) {

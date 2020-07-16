@@ -48,7 +48,7 @@ public class Range {
         char[] childValChars = new char[valLength+1];  // reusable object for constructing children topic strings
         val.getChars(0, valLength, childValChars, 0);  // copy the current topic string into the new array
         for (int i=0;i<radix;i++) {
-            childValChars[valLength] = RadixStringFormatter.radixCharConvert(i);  // overwrite the last char of the array with incrementing digits
+            childValChars[valLength] = GeoStringFormatter.radixCharConvert(i);  // overwrite the last char of the array with incrementing digits
             children.add(new Range(formatter,new String(childValChars)));
         }
         return children;

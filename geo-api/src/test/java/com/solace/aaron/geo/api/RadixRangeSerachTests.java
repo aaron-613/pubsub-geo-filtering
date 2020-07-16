@@ -19,7 +19,7 @@ public class RadixRangeSerachTests {
     public void newNegativeRangeTests() {
         // testing the fact that the range could have a negative
         System.out.println("=== newNegativeRangeTests ===");
-        RadixStringFormatter rsf = new RadixStringFormatter.RadixBuilder().radix(10).scale(5).width(8).offset(0).build();
+        GeoStringFormatter rsf = new GeoStringFormatter.RadixBuilder().radix(10).scale(5).width(8).offset(0).build();
         System.out.println(rsf.getInner("01"));  // 10
         System.out.println(rsf.getOuter("01"));  // 20
         System.out.println(rsf.getInner("00"));  // 0
@@ -71,7 +71,7 @@ public class RadixRangeSerachTests {
     public void newNegativeRangeTestsBase4() {
         // testing the fact that the range could have a negative
         System.out.println("=== newNegativeRangeTests Base 4 ===");
-        RadixStringFormatter rsf = new RadixStringFormatter.RadixBuilder().radix(4).scale(5).width(8).offset(0).build();
+        GeoStringFormatter rsf = new GeoStringFormatter.RadixBuilder().radix(4).scale(5).width(8).offset(0).build();
         System.out.println(rsf.getInner("01"));  // 10
         System.out.println(rsf.getOuter("01"));  // 20
         System.out.println(rsf.getInner("00"));  // 0
@@ -122,7 +122,7 @@ public class RadixRangeSerachTests {
 
     public void testSearchWorks() {
 
-        RadixStringFormatter rsf = new RadixStringFormatter.RadixBuilder().radix(10).scale(4).width(7).offset(90).build();
+        GeoStringFormatter rsf = new GeoStringFormatter.RadixBuilder().radix(10).scale(4).width(7).offset(90).build();
 //        System.out.println("0.3");
 //        System.out.println(rsf.convert(0.3999999));
 //        System.out.println("0003");

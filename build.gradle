@@ -7,6 +7,7 @@ plugins {
 configure(subprojects.findAll { it.name.startsWith('geo') }) {
 
     apply plugin: 'java'
+    apply plugin: 'checkstyle'
 
     dependencies {
         // for my various geometric calculations
@@ -21,6 +22,7 @@ configure(subprojects.findAll { it.name.startsWith('geo') }) {
         testImplementation 'junit:junit:4.12'
     }
 }
+
 
 allprojects {
 
