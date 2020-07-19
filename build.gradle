@@ -14,6 +14,9 @@ configure(subprojects.findAll { it.name.startsWith('geo') }) {
         implementation 'org.locationtech.jts:jts:1.17.0'
         implementation 'org.locationtech.jts.io:jts-io-common:1.17.0'
         //implementation group: 'math.geom2d', name: 'javaGeom', version: '0.11.1'
+        // https://github.com/vsch/flexmark-java
+        //implementation 'com.vladsch.flexmark:flexmark-all:0.62.2'
+
 
         // new an improved logging framework, no more slf4j
         implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.11.1'
@@ -22,6 +25,27 @@ configure(subprojects.findAll { it.name.startsWith('geo') }) {
         testImplementation 'junit:junit:4.12'
     }
 }
+
+
+
+
+configurations {
+  jaxDoclet
+}
+
+dependencies {
+  //jaxDoclet "some.interesting:Dependency:1.0"
+}
+
+task generateRestApiDocs(type: Javadoc) {
+  source = sourceSets.main.allJava
+  destinationDir = reporting.file("rest-api-docs")
+  options.docletpath = configurations.jaxDoclet.files.asType(List)
+  options.doclet = "com.lunatech.doclets.jax.jaxrs.JAXRSDoclet"
+  options.addStringOption("jaxrscontext", "http://localhost:8080/myapp")
+}
+
+
 
 
 allprojects {

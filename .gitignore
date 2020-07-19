@@ -15,7 +15,6 @@ geo-submgr/.project
 geo-submgr/.settings
 geo-submgr/bin
 map/google-maps-api-key.js
-
 geo-api/src/main/java/com/solace/aaron/geo/api/RadixStringFormatter.java.bak
 geo-submgr/Australia_Polygon_small.csv
 map/map.html

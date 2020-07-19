@@ -1,0 +1,109 @@
+/* Javadoc style sheet */
+/*
+Overall document style
+*/
+body {
+    background-color:#ffffff;
+    color:#334455;
+    font-family:Arial, Helvetica, sans-serif;
+    font-size:100%;
+    //margin:0;
+}
+a:link, a:visited {
+    text-decoration:none;
+    color:#4c6b87;
+}
+a:hover, a:focus {
+    text-decoration:underline;
+    color:#bb7a2a;
+}
+a:active {
+    text-decoration:none;
+    color:#4c6b87;
+}
+a[name] {
+    color:#353833;
+}
+a[name]:hover {
+//    text-decoration:none;
+    color:#353833;
+}
+pre {
+//    font-size:1.3em;
+}
+h1 {
+    font-size:3em;
+    font-family: monospace;
+    color:#ff8833;
+    background:#334455;
+    padding-left:8;
+}
+h2 {
+    font-size:1.6em;
+    text-decoration:underline;
+    font-variant:small-caps;
+}
+h3 {
+    font-size:1.3em;
+    color:#223344;
+    background:#dddddd;
+    padding-left:5;
+}
+h4 {
+//    font-size:1.3em;
+}
+h5 {
+//    font-size:1.2em;
+}
+h6 {
+    font-size:1.1em;
+}
+ul {
+    list-style-type:disc;
+}
+code, tt {
+//    font-size:1.2em;
+}
+dt code {
+//    font-size:1.2em;
+}
+table tr td dt code {
+//    font-size:1.2em;
+    vertical-align:top;
+}
+table.spacey {
+    border-spacing: 0 0.5em;
+    border:1px solid #778899;
+}
+td {
+    padding-left:5;
+    padding-right:5;
+}
+td {
+    margin-top:6px;
+    margin-bottom:6px;
+}
+sup {
+    font-size:.6em;
+}
+.value {
+    color:#555522;
+    font-weight:bold;
+}
+.key {
+    color:#222255;
+    font-weight:bold;
+}
+.bold {
+    font-weight:bold;
+    vertical-align:top;
+}
+.text {
+    font-family:monospace;
+    background:#eeeeee;
+    font-size:1.25em;
+    width:100%;
+}
+pre {
+    font-size:0.8em;
+}
