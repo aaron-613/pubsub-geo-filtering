@@ -10,7 +10,7 @@ import java.util.Map;
  * @author AaronLee
  *
  */
-public class RadixUtils {
+class RadixUtils {
 
     /**
      * <p>This function returns the number of places to the LEFT of the radix point needed to properly display the number based on range.
@@ -41,7 +41,7 @@ public class RadixUtils {
      * @param maxRange
      * @return
      */
-    public static int calcFactor(double maxRange, int radix) {
+    static int calcFactor(double maxRange, int radix) {
         if (radix == 10) return -(int)Math.ceil(Math.log10(Math.abs(maxRange)));
         else return -(int)Math.ceil(Math.log10(Math.abs(maxRange))/Math.log10(radix));
     }
@@ -91,7 +91,7 @@ public class RadixUtils {
      * This function is used to determine what the inverse of the factor is, which is used to 
      * 
      */
-    public static double lookupInverseFactors(int radix, int factor) {
+    static double lookupInverseFactors(int radix, int factor) {
         try {
             return INVERSE_FACTORS.get(radix).get(factor-MIN_FACTOR);
         } catch (IndexOutOfBoundsException e) {
@@ -113,7 +113,7 @@ public class RadixUtils {
      * @param factor
      * @return
      */
-    public static double lossOfPrecision(int radix, int factor) {
+    static double lossOfPrecision(int radix, int factor) {
         return lookupInverseFactors(radix,factor);
     }
     
@@ -125,7 +125,7 @@ public class RadixUtils {
      * @param numPadding
      * @return
      */
-    public static int maxDecEquivPossible(int radix, int numPadding) {
+    static int maxDecEquivPossible(int radix, int numPadding) {
         return (int)Math.pow(radix,numPadding)-1;
     }
     
@@ -137,7 +137,7 @@ public class RadixUtils {
      * @param radix
      * @return
      */
-    public static int numPaddingNeeded(int radix, int maxVal) {
+    static int numPaddingNeeded(int radix, int maxVal) {
         int digitCount = 0;
         while (maxVal > 0) {
             maxVal /= radix;

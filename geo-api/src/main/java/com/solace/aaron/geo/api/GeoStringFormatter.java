@@ -4,6 +4,9 @@
 
 package com.solace.aaron.geo.api;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * This class provides the important methods for converting between floating point numbers and the GeoString
  * representation (in different bases) used to perform the filtering by the algorithm.
@@ -331,7 +334,7 @@ public class GeoStringFormatter {
         }
     }
     
-    public String getDecimalString(final String geoString) {
+    String getDecimalString(final String geoString) {
         assert radix == 10;
         assert offset == 0;
         assert includeDecimal == true;
@@ -352,5 +355,58 @@ public class GeoStringFormatter {
         return new String(charArray);
     }
 
+    Range buildStartingRange() {
+        return new Range();
+    }
+    
+    Range buildDebugRange(String val) {
+        return new Range(val);
+    }
+    
+    
+    class Range {
 
+        private final String val;
+        private final double inner;
+        private final double outer;
+        
+        Range() {
+            this("");
+        }    
+        
+        Range(String val) {
+            this.val = val;
+            this.inner = GeoStringFormatter.this.getInner(val);
+            this.outer = GeoStringFormatter.this.getOuter(val);
+        }
+        
+        int getWidth() {
+            return val.length();
+        }
+        
+        String getVal() {
+            return val;
+        }
+
+        double getInner() {
+            return inner;
+        }
+
+        double getOuter() {
+            return outer;
+        }
+        
+        List<Range> buildChildren() {
+            List<Range> children = new ArrayList<>(radix);
+            final int valLength = val.length();
+            char[] childValChars = new char[valLength+1];  // reusable object for constructing children topic strings
+            val.getChars(0, valLength, childValChars, 0);  // copy the current topic string into the new array
+            for (int i=0;i<radix;i++) {
+                childValChars[valLength] = radixCharConvert(i);  // overwrite the last char of the array with incrementing digits
+                children.add(new Range(new String(childValChars)));
+            }
+            return children;
+        }
+
+    };
 }

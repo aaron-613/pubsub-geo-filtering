@@ -3,7 +3,6 @@ package com.solace.aaron.geo.submgr;
 import java.io.StringReader;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -14,17 +13,10 @@ import javax.json.JsonReader;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.Geometry;
-import org.locationtech.jts.simplify.DouglasPeuckerSimplifier;
 
-import com.solace.aaron.geo.api.Geo2dSearch;
 import com.solacesystems.jcsmp.BytesXMLMessage;
-import com.solacesystems.jcsmp.ClientName;
-import com.solacesystems.jcsmp.DeliveryMode;
 import com.solacesystems.jcsmp.Destination;
 import com.solacesystems.jcsmp.JCSMPChannelProperties;
-import com.solacesystems.jcsmp.JCSMPErrorResponseException;
 import com.solacesystems.jcsmp.JCSMPException;
 import com.solacesystems.jcsmp.JCSMPFactory;
 import com.solacesystems.jcsmp.JCSMPProperties;
@@ -33,9 +25,6 @@ import com.solacesystems.jcsmp.JCSMPStreamingPublishEventHandler;
 import com.solacesystems.jcsmp.SessionEventArgs;
 import com.solacesystems.jcsmp.SessionEventHandler;
 import com.solacesystems.jcsmp.TextMessage;
-import com.solacesystems.jcsmp.Topic;
-import com.solacesystems.jcsmp.TopicProperties;
-import com.solacesystems.jcsmp.User_Cos;
 import com.solacesystems.jcsmp.XMLMessageConsumer;
 import com.solacesystems.jcsmp.XMLMessageListener;
 import com.solacesystems.jcsmp.XMLMessageProducer;
@@ -134,7 +123,7 @@ public class GeoRoutingSubscriptionManager implements XMLMessageListener {
     }
     
     void doSubscriptions(final Search search, final SubAction action, final BytesXMLMessage origMsg) throws JCSMPException {
-        ClientName clientName = JCSMPFactory.onlyInstance().createClientName(origMsg.getSenderId());
+/*        ClientName clientName = JCSMPFactory.onlyInstance().createClientName(origMsg.getSenderId());
         Geometry target = search.target;
 //        Geometry target = WktTests.getOrchard();
         Geo2dSearch grid = new Geo2dSearch(10,6,7,4,4,100,200,target);  //TODO target is null essentially if doing an 'undo'  
@@ -142,7 +131,7 @@ public class GeoRoutingSubscriptionManager implements XMLMessageListener {
         if (!grid.intersects()) {
             // means that no search area was specified, or something completely outside the earth was.  So add/remove everything!
             TopicProperties tp = new TopicProperties();
-            tp.setName(search.topicPrefix + "*/*" + search.topicSuffix);
+            tp.setName(search.topicPrefix + "* /" + search.topicSuffix);
             tp.setRxAllDeliverToOne(false);
             Topic topic = JCSMPFactory.onlyInstance().createTopic(tp);
             logger.info(action.name()+": "+topic.toString());
@@ -194,13 +183,13 @@ public class GeoRoutingSubscriptionManager implements XMLMessageListener {
                 e.printStackTrace();
             }
         }
-    }
+*/    }
     
     
     //Create a success reply with a result
-    private BytesXMLMessage createReplyMessage(Search search, Geo2dSearch grid) {
+    private BytesXMLMessage createReplyMessage(Search search/* , Geo2dSearch grid */) {
         BytesXMLMessage replyMessage = JCSMPFactory.onlyInstance().createMessage(BytesXMLMessage.class);
-        List<String> subs = grid.getSubs();
+/*        List<String> subs = grid.getSubs();
         logger.info("A total of "+subs.size()+" subscriptions were generated");
         int subBytes = 0;
         for (String sub : subs) {
@@ -243,7 +232,7 @@ public class GeoRoutingSubscriptionManager implements XMLMessageListener {
         System.out.printf("This is the result (%d bytes): '%s'%n",result.length(),result.substring(0, Math.min(result.length(),500)));
         replyMessage.setDeliveryMode(DeliveryMode.DIRECT);
         replyMessage.setCos(User_Cos.USER_COS_2);  // bump up the priority slightly so that it jumps in front of any buffered-up D1 messages
-        return replyMessage;
+*/        return replyMessage;
     }
     
     //Reply to a request

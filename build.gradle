@@ -27,8 +27,6 @@ configure(subprojects.findAll { it.name.startsWith('geo') }) {
 }
 
 
-
-
 configurations {
   jaxDoclet
 }

@@ -11,7 +11,7 @@ import java.util.Set;
  * @author AaronLee
  *
  */
-public final class ArrayMath {
+final class ArrayMath {
 
     /**
      * Returns the sum of one array of numbers to another.

@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Set;
 
+import com.solace.aaron.geo.api.GeoStringFormatter.Range;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.locationtech.jts.geom.Coordinate;
@@ -26,7 +28,7 @@ import org.locationtech.jts.geom.Polygon;
  * @author Aaron Lee
  *
  */
-public class Geo2dSearch {
+class Geo2dSearch {
 
     private static final double CUT_OFF_COVERAGE_RATIO = 0.9995;  // no point in splitting if above this. don't use 1.0 in case of float round error
 
@@ -50,7 +52,7 @@ public class Geo2dSearch {
     double[] combinedRatios;  // a combination of overRatios and underRatios.  underRatios are given a x2 multiplier to decrease the amount the subs can be "under" the target.
     int worstIndex;           // which target is the "worst", has the worst combinedRatio. Recalculated after each loop.
     
-    public Geo2dSearch(Geo2dSearchEngine engine, Geometry[] targets) {
+    Geo2dSearch(Geo2dSearchEngine engine, Geometry[] targets) {
         this.engine = engine;
         this.targets = targets;
         
@@ -75,8 +77,8 @@ public class Geo2dSearch {
         
         // start with the "global" grid
         RadixGrid startNode = new RadixGrid(targets,
-                new Range(engine.getXStringFormatter()),
-                new Range(engine.getYStringFormatter())
+                engine.getXStringFormatter().buildStartingRange(),
+                engine.getYStringFormatter().buildStartingRange()
 //                engine.getXFixedScale()-engine.getXFixedWidth(),
 //                engine.getYFixedScale()-engine.getYFixedWidth()
                 );
@@ -438,8 +440,8 @@ public class Geo2dSearch {
 
         private RadixGrid parent = null;
         private final Geometry[] trimmedTargets = new Geometry[Geo2dSearch.this.targets.length];
-        private final Range xRange;
-        private final Range yRange;
+        private final GeoStringFormatter.Range xRange;
+        private final GeoStringFormatter.Range yRange;
 //        private final int xFactor; // this is essentially the depth... level = 0 -> no decimal places, lev 1...
 //        private final int yFactor;
         private final Polygon gridPolygon;
@@ -766,8 +768,8 @@ public class Geo2dSearch {
                 sb.append('|');
                 for (int x=0;x<engine.getRadix();x++) {
                     RadixGrid temp = new RadixGrid(this,
-                            new Range(engine.getXStringFormatter(),xRange.getVal()+GeoStringFormatter.radixCharConvert(x)),
-                            new Range(engine.getYStringFormatter(),yRange.getVal()+GeoStringFormatter.radixCharConvert(y)));
+                            engine.getXStringFormatter().buildDebugRange(xRange.getVal()+GeoStringFormatter.radixCharConvert(x)),
+                            engine.getYStringFormatter().buildDebugRange(yRange.getVal()+GeoStringFormatter.radixCharConvert(y)));
                     if (temp.intersects()) sb.append("()");
                     else sb.append("  ");
                 }

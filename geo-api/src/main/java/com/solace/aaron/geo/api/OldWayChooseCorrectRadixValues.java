@@ -136,7 +136,7 @@ public class OldWayChooseCorrectRadixValues {
         
         int approxScale = -(int)Math.floor(Math.log10(Math.abs(finest))/Math.log10(radix));
         
-        System.out.printf("Radix: %d, Range: %f to %f%n=============================%n",radix,min,max);
+        System.out.printf("Radix: %d, Range: %f to %f%n==========================================%n",radix,min,max);
         for (int scale=approxScale-2;scale<=approxScale+2;scale++) {
             double reso = 1.0/Math.pow(radix,scale);
             //System.out.println((Math.log10((range*Math.pow(radix,scale)))/Math.log10(radix)));

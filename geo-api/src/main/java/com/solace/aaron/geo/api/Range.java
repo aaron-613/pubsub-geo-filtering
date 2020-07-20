@@ -7,41 +7,41 @@ import java.util.List;
  * This utility class is used to represent a range of 
  *
  */
-public class Range {
+class Range {
 
     private final GeoStringFormatter formatter;
     private final String val;
     private final double inner;
     private final double outer;
     
-    public Range(GeoStringFormatter formatter) {
+    private Range(GeoStringFormatter formatter) {
         this(formatter,"");
     }    
     
-    public Range(GeoStringFormatter formatter, String val) {
+    private Range(GeoStringFormatter formatter, String val) {
         this.formatter = formatter;
         this.val = val;
         this.inner = formatter.getInner(val);
         this.outer = formatter.getOuter(val);
     }
     
-    public int getWidth() {
+    int getWidth() {
         return val.length();
     }
     
-    public String getVal() {
+    String getVal() {
         return val;
     }
 
-    public double getInner() {
+    double getInner() {
         return inner;
     }
 
-    public double getOuter() {
+    double getOuter() {
         return outer;
     }
     
-    public List<Range> buildChildren() {
+    List<Range> buildChildren() {
         final int radix = formatter.getRadix();
         List<Range> children = new ArrayList<>(radix);
         final int valLength = val.length();
