@@ -20,6 +20,34 @@ public class FloatPointTests {
         }
     }
     
+    @Test
+    public void parseDoubleTests2() {
+        float test = 123.456f;
+        System.out.println(test);
+        test = 173.4567f;
+        System.out.println(test);
+        test = 173.45670f;
+        System.out.println(test);
+        test = 173.45671f;
+        System.out.println(test);
+        test = 173.45672f;
+        System.out.println(test);
+        test = 173.45673f;
+        System.out.println(test);
+        test = 173.45674f;
+        System.out.println(test);
+        test = 173.45675f;
+        System.out.println(test);
+        test = 173.45676f;
+        System.out.println(test);
+        test = 173.45677f;
+        System.out.println(test);
+        test = 173.45678f;
+        System.out.println(test);
+        test = 173.45679f;
+        System.out.println(test);
+
+    }
     
     @Test
     public void parseDoubleTests() {

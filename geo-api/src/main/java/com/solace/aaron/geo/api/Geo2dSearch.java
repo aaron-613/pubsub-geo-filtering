@@ -54,19 +54,21 @@ class Geo2dSearch {
     
     Geo2dSearch(Geo2dSearchEngine engine, Geometry[] targets) {
         this.engine = engine;
+        //this.targets = new Geometry[] {targets[0]};
         this.targets = targets;
         
         // pre-processing
-        for (int i=0;i<targets.length-1;i++) {
-            for (int j=i+1;j<targets.length;j++) {
-                Geometry intersection = targets[i].intersection(targets[j]);
+        for (int i=0;i<this.targets.length-1;i++) {
+            for (int j=i+1;j<this.targets.length;j++) {
+                Geometry intersection = this.targets[i].intersection(this.targets[j]);
                 if (intersection.getArea() > 0) {
                     System.err.println(intersection);
-                    targets[i] = targets[i].difference(targets[j]);
+                    //this.targets[i] = this.targets[i].difference(this.targets[j]);
+                    this.targets[j] = this.targets[j].difference(this.targets[i]);
 //                    throw new AssertionError("input target shapes are overlapping. can only be touching at vertices/edges.");
                 }
             }
-            for (Coordinate coord : targets[i].getCoordinates()) {
+            for (Coordinate coord : this.targets[i].getCoordinates()) {
                 // this will check if anything is outside our bounds defined by the range of the formatter
                 engine.getXStringFormatter().convert(coord.x);
                 engine.getYStringFormatter().convert(coord.y);
@@ -76,7 +78,7 @@ class Geo2dSearch {
         }
         
         // start with the "global" grid
-        RadixGrid startNode = new RadixGrid(targets,
+        RadixGrid startNode = new RadixGrid(this.targets,
                 engine.getXStringFormatter().buildStartingRange(),
                 engine.getYStringFormatter().buildStartingRange()
 //                engine.getXFixedScale()-engine.getXFixedWidth(),
@@ -89,9 +91,9 @@ class Geo2dSearch {
         startNode.parent = null;  // force this guy to be the root
         this.rootNode = startNode;
         curNumberSubs = 1;
-        targetAreas = new double[targets.length];
-        for (int i=0;i<targets.length;i++) {
-            targetAreas[i] = targets[i].getArea();
+        targetAreas = new double[this.targets.length];
+        for (int i=0;i<this.targets.length;i++) {
+            targetAreas[i] = this.targets[i].getArea();
         }
         logger.info("Starting with {}",rootNode.toString());
         System.out.println(Arrays.toString(targetAreas));

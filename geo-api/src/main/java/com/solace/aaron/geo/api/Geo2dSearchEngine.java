@@ -84,7 +84,7 @@ public class Geo2dSearchEngine {
     public Geo2dSearchResult splitToRatio(final List<Geometry> targets, final double completionRatio, final int maxSubs) {
         Geometry[] targetCopy = new Geometry[targets.size()];
         for (int i=0;i<targets.size();i++) {
-            targetCopy[i] = targets.get(i).copy();  // make a deep copy of the geometries so they can't be modified afterwards
+            targetCopy[i] = targets.get(i).copy().buffer(0.2);  // make a deep copy of the geometries so they can't be modified afterwards
         }
         Geo2dSearch search = new Geo2dSearch(this,targetCopy);
         return search.splitToRatio(completionRatio,maxSubs);
