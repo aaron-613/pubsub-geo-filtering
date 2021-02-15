@@ -15,9 +15,11 @@ public class NormalDecimalStringFormatterTests {
     public void innerTests() {
         System.out.println("Here are some inner tests");
         GeoStringFormatter f = GeoStringFormatter.buildRegularDecimalFormatter(8,5);
-        
+
+        System.out.println(f.getInner(""));
         System.out.println(f.getInner("0"));
         System.out.println(f.getInner("-"));
+        System.out.println(f.getInner("9"));
         System.out.println(f.getInner("00"));
         System.out.println(f.getInner("-0"));
         System.out.println(f.getInner("000"));
@@ -31,11 +33,13 @@ public class NormalDecimalStringFormatterTests {
         
     @Test
     public void outerTests() {
-        System.out.println("Here are some outer tests");
+        System.out.println("Here are some outer tests formatted for Decimal(8,5)");
         GeoStringFormatter f = GeoStringFormatter.buildRegularDecimalFormatter(8,5);
         
+        System.out.println(f.getOuter(""));
         System.out.println(f.getOuter("0"));
         System.out.println(f.getOuter("-"));
+        System.out.println(f.getOuter("9"));
         System.out.println(f.getOuter("00"));
         System.out.println(f.getOuter("-0"));
         System.out.println(f.getOuter("000"));
@@ -63,7 +67,6 @@ public class NormalDecimalStringFormatterTests {
         System.out.println(f.getDecimalString("0012222"));
         System.out.println(f.getDecimalString("-0155555"));
         
-
     }        
 
 

@@ -77,20 +77,20 @@ public class Search {
                 JsonArray circles = shapes.getJsonArray("circles");
                 for (int i=0;i<circles.size();i++) {
                     JsonObject circle = circles.getJsonObject(i);
-                    GeometricShapeFactory gf = new GeometricShapeFactory();
+                    GeometricShapeFactory factory = new GeometricShapeFactory();
                     double x = circle.getJsonArray("coords").getJsonNumber(0).doubleValue();
                     double y = circle.getJsonArray("coords").getJsonNumber(1).doubleValue();
                     double radius = circle.getJsonNumber("radius").doubleValue();
-                    gf.setCentre(new Coordinate(x,y));
+                    factory.setCentre(new Coordinate(x,y));
                     if (circle.containsKey("modifier") && circle.getJsonString("modifier").getString().equals("metresToLatLon")) {
-                        gf.setWidth(LatLonHelper.getLatLonCircleDimensions(x,y,radius)[0]);  // lat offset, even though it is width, b/c order matters
-                        gf.setHeight(LatLonHelper.getLatLonCircleDimensions(x,y,radius)[1]);
+                        factory.setWidth(LatLonHelper.getLatLonCircleDimensions2(x,radius)[0]);  // lat offset, even though it is width, b/c order matters
+                        factory.setHeight(LatLonHelper.getLatLonCircleDimensions2(x,radius)[1]);
                     } else {
-                        gf.setWidth(radius*2);  // I guess?  We haven't tested this yet.
-                        gf.setHeight(radius*2);
+                        factory.setWidth(radius*2);  // I guess?  We haven't tested this yet.
+                        factory.setHeight(radius*2);
                     }
-                    gf.setNumPoints(72);
-                    Geometry c = gf.createCircle();
+                    factory.setNumPoints(72);
+                    Geometry c = factory.createCircle();
                     target = target.union(c);
                 }
             }

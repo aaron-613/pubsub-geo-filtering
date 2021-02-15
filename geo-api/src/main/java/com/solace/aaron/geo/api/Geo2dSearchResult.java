@@ -38,7 +38,15 @@ public class Geo2dSearchResult {
      * Returns the List of subscriptions, format <code>"xxxxx* /yyyyyy*"</code> (no space) for each target.
      */
     public List<List<String>> getSubs() {
-        return rootNode.getSubs();
+        return rootNode.getSubs(false);
+    }
+
+    /**
+     * Returns the List of subscriptions, format <code>"yyyyy* /xxxxx*"</code> (no space) for each target.
+     * Returns the two levels in reversed order, useful for lat/lon vs. x/y support.
+     */
+    public List<List<String>> getSubsReversed() {
+        return rootNode.getSubs(true);
     }
 
     /**

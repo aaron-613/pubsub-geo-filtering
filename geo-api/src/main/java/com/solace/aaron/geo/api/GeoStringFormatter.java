@@ -207,7 +207,6 @@ public class GeoStringFormatter {
         return getOuter("");
     }
     
-    
     @Override
     public String toString() {
         return String.format("[%f..%f), radix=%d, width=%d, scale=%d, offset=%d, with '.'?=%b",getInner(""),getOuter(""),radix,width,scale,offset,includeDecimal);
@@ -295,8 +294,7 @@ public class GeoStringFormatter {
     public String convertDecimal(final double realValue) {
         return getDecimalString(convert(realValue));
     }
-    
-    
+
     /**
      * Will provide the formatted GeoString by converting the double 'realValue' 
      * @param realValue a double hopefully within the range of the formatter
@@ -363,29 +361,45 @@ public class GeoStringFormatter {
         return new Range(val);
     }
     
-    
+    /**
+     * The Range is the actual object/class that holds the range of values on the inner and outer
+     * side of the subscription.  
+     */
     class Range {
 
         private final String val;
         private final double inner;
         private final double outer;
         
-        Range() {
+        private Range() {
             this("");
         }    
         
-        Range(String val) {
+        private Range(String val) {
             this.val = val;
             this.inner = GeoStringFormatter.this.getInner(val);
             this.outer = GeoStringFormatter.this.getOuter(val);
         }
         
+        /**
+         * The width (length, actually) of the String `val` that defines this range.
+         * @return
+         */
         int getWidth() {
             return val.length();
         }
         
         String getVal() {
             return val;
+        }
+
+        @Override
+        public String toString() {
+            if (includeDecimal) {
+                return getDecimalString(val);
+            } else {
+                return val;
+            }
         }
 
         double getInner() {
@@ -395,7 +409,22 @@ public class GeoStringFormatter {
         double getOuter() {
             return outer;
         }
+
+        /** This one should only be used by the VERY first time you create the search grid, b/c it has +1 children for the - sign. */
+        List<Range> buildInitialChildren() {
+            assert val.isEmpty();
+            List<Range> children = new ArrayList<>(radix+1);
+            children.add(new Range("-"));
+            for (int i=0;i<radix;i++) {
+                children.add(new Range(new String(new char[] {radixCharConvert(i)})));
+            }
+            return children;
+        }
         
+        /**
+         * This build all the sub-ranges, using the exact number of the radix.
+         * @return
+         */
         List<Range> buildChildren() {
             List<Range> children = new ArrayList<>(radix);
             final int valLength = val.length();
@@ -407,6 +436,5 @@ public class GeoStringFormatter {
             }
             return children;
         }
-
     };
 }

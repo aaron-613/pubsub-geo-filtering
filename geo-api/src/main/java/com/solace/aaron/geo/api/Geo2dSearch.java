@@ -231,8 +231,8 @@ class Geo2dSearch {
         logger.info("$$$$ TOTAL TIME: {}ms, LOOPS: {}",(System.nanoTime()-totalTime)/1000000,loop);
         int tot = 0;
         for (int i=0;i<targets.length;i++) {
-            logger.info("Total number of subs {}: {}",i,rootNode.getSubs().get(i).size());
-            tot += rootNode.getSubs().get(i).size();
+            logger.info("Total number of subs {}: {}",i,rootNode.getSubs(false).get(i).size());
+            tot += rootNode.getSubs(false).get(i).size();
         }
         logger.info("TOTAL number of subs: {}",tot);
         logger.info(" (and by my count: {})",curNumberSubs);
@@ -259,7 +259,7 @@ class Geo2dSearch {
         logger.info("Average Combined: "+(Math.floor((1-avg)*10000)/100)+"%");
 //        logger.info("CurArea deltas: "+Arrays.toString(ArrayMath.subtract(curAreas2,curAreas)));
 //        logger.info("For target #4: {}",(rootNode.getUnion().get(3).getArea() - targetAreas[3]) / targetAreas[3]);
-        logger.info(rootNode.getSubs());
+        logger.info(rootNode.getSubs(false));
         
         return new Geo2dSearchResult(targets,rootNode,new ArrayList<RadixGrid>(orderedSplitGrids));
     }
@@ -408,12 +408,16 @@ class Geo2dSearch {
 
         /**
          * Helper function to put the whole subscription string together, including wildcard chars, but not trailing '/' char
-         */ // e.g. "-35.12*/_93.381*"
-        private String buildTopicSubscription() {
+         */ // e.g. "-35.12*/093.381*"
+        private String buildTopicSubscription(boolean isReversed) {
             StringBuilder sb = new StringBuilder();
 //            sb.append(xStringFormatter.convert(innerX,quadrant.xNegativeModifier<0,xFixedScale-xFactor)).append("*/");
 //            sb.append(yStringFormatter.convert(innerY,quadrant.yNegativeModifier<0,engine.getyFixedScale()-yFactor)).append('*');
-            sb.append(xRange.getVal()).append("*/").append(yRange.getVal()).append("*");
+            if (!isReversed) {
+                sb.append(yRange.toString()).append("*/").append(xRange.toString()).append("*");
+            } else {
+                sb.append(xRange.toString()).append("*/").append(yRange.toString()).append("*");
+            }
             return sb.toString();
         }
 
@@ -631,7 +635,13 @@ class Geo2dSearch {
             int horizFullCoverageKidCount = 0;
             Set<Integer> horizIndexes = new HashSet<>();
             if (stripeDirection != StripeDirection.HORIZONTAL) {  // so, either TBD (usual) or vertical
-                for (Range child : xRange.buildChildren()) {
+                List<Range> subRanges;
+                if (xRange.getWidth() == 0) {  // if first char, can also include "-" sign
+                    subRanges = xRange.buildInitialChildren();
+                } else {
+                    subRanges = xRange.buildChildren();
+                }
+                for (Range child : subRanges) {
                     RadixGrid kid = new RadixGrid(this,child,yRange);
                     if (kid.intersects()) {
                         vertKids.add(kid);
@@ -644,7 +654,13 @@ class Geo2dSearch {
                 }
             }
             if (stripeDirection != StripeDirection.VERTICAL) {  // either TBD or horizontal
-                for (Range child : yRange.buildChildren()) {
+                List<Range> subRanges;
+                if (yRange.getWidth() == 0) {  // if first char, can also include "-" sign
+                    subRanges = yRange.buildInitialChildren();
+                } else {
+                    subRanges = yRange.buildChildren();
+                }
+                for (Range child : subRanges) {
                     RadixGrid kid = new RadixGrid(this,xRange,child);
                     if (kid.intersects()) {
                         horizKids.add(kid);
@@ -741,7 +757,7 @@ class Geo2dSearch {
                 }
                 Rect coords = buildGridCoords();
                 return String.format("%s :  ([%f,%f]->[%f,%f]), xFactor=%d, yFactor=%d, COMP=%.8f, Targets=%s, Ratio=%.6f, Children=%d, Split? %b, Shape=%s, Slice Dir=%s",
-                        buildTopicSubscription(),coords.x1,coords.y1,coords.x2,coords.y2,getXFactor(),getYFactor(),SORT_COMPARATOR.buildIntersectionRatio(this),sortedTargets,staticCoverageRatio,getNumChildren(),hasSplit,shape,stripeDirection);
+                        buildTopicSubscription(false),coords.x1,coords.y1,coords.x2,coords.y2,getXFactor(),getYFactor(),SORT_COMPARATOR.buildIntersectionRatio(this),sortedTargets,staticCoverageRatio,getNumChildren(),hasSplit,shape,stripeDirection);
             } catch (RuntimeException e) {
                 return "toString() threw an error of some sort! "+e.toString();
             }
@@ -752,7 +768,7 @@ class Geo2dSearch {
          */
         @Override
         public int hashCode() {
-            return buildTopicSubscription().hashCode();
+            return buildTopicSubscription(false).hashCode();
         }
 
         private boolean intersects() {
@@ -847,12 +863,18 @@ class Geo2dSearch {
             return newSplitContenderGrids;
         }
         
-        List<List<String>> getSubs() {
+        /**
+         * Return a List of all the actual subscriptions.
+         * <p>
+         * List-per-Target > List-of-subs
+         * @return
+         */
+        List<List<String>> getSubs(boolean isReversed) {
             List<List<String>> returnList = new ArrayList<>(trimmedTargets.length);
             if (!hasSplit) {
                 for (int i=0;i<trimmedTargets.length;i++) {
                     if (i == this.getBiggestIntersectedTarget()) {
-                        returnList.add(Collections.singletonList(buildTopicSubscription()));
+                        returnList.add(Collections.singletonList(buildTopicSubscription(isReversed)));
                     } else {
                         returnList.add(Collections.emptyList());
                     }
@@ -862,7 +884,7 @@ class Geo2dSearch {
                     returnList.add(new ArrayList<>());
                 }
                 for (RadixGrid child : children) {
-                    List<List<String>> childSubs = child.getSubs();
+                    List<List<String>> childSubs = child.getSubs(isReversed);
                     for (int i=0;i<trimmedTargets.length;i++) {
                         returnList.get(i).addAll(childSubs.get(i));
                     }

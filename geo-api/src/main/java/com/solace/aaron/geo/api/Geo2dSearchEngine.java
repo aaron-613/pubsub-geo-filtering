@@ -44,8 +44,19 @@ public class Geo2dSearchEngine {
         this.yWidth = yWidth;
 //        this.xStringFormatter = new RadixStringFormatter(radix, xWidth, scale, xOffset);
 //        this.yStringFormatter = new RadixStringFormatter(radix, yWidth, scale, yOffset);
-        this.xStringFormatter = new GeoStringFormatter.RadixBuilder().radix(radix).width(xWidth).scale(scale).offset(xOffset).build();
-        this.yStringFormatter = new GeoStringFormatter.RadixBuilder().radix(radix).width(yWidth).scale(scale).offset(yOffset).build();
+        this.xStringFormatter = new GeoStringFormatter.RadixBuilder().
+            radix(this.radix).width(this.xWidth).scale(this.scale).offset(xOffset).build();
+        this.yStringFormatter = new GeoStringFormatter.RadixBuilder().
+            radix(this.radix).width(this.yWidth).scale(this.scale).offset(yOffset).build();
+    }
+
+    public Geo2dSearchEngine(int scale, int xWidth, int yWidth) {
+        this.radix = 10;
+        this.scale = scale;
+        this.xWidth = xWidth;
+        this.yWidth = yWidth;
+        this.xStringFormatter = GeoStringFormatter.buildRegularDecimalFormatter(xWidth, scale);
+        this.yStringFormatter = GeoStringFormatter.buildRegularDecimalFormatter(yWidth, scale);
     }
     
     public int getRadix() {
@@ -79,12 +90,11 @@ public class Geo2dSearchEngine {
     public GeoStringFormatter getYStringFormatter() {
         return yStringFormatter;
     }
-    
 
     public Geo2dSearchResult splitToRatio(final List<Geometry> targets, final double completionRatio, final int maxSubs) {
         Geometry[] targetCopy = new Geometry[targets.size()];
         for (int i=0;i<targets.size();i++) {
-            targetCopy[i] = targets.get(i).copy().buffer(0.2);  // make a deep copy of the geometries so they can't be modified afterwards
+            targetCopy[i] = targets.get(i).copy();//.buffer(0.2);  // make a deep copy of the geometries so they can't be modified afterwards
         }
         Geo2dSearch search = new Geo2dSearch(this,targetCopy);
         return search.splitToRatio(completionRatio,maxSubs);

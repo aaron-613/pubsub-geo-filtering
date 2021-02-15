@@ -47,7 +47,7 @@ public class OldWayChooseCorrectRadixValues {
     public static void printTableMetres(double max, double finestResInMetres) {
         finestResInMetres = Math.abs(finestResInMetres);
         System.out.printf("Table for max val=%.4f, resolution=%.2f metres:%n",max,finestResInMetres);
-        finestResInMetres = LatLonHelper.convertMetresToDecimalDegree(finestResInMetres);
+        //finestResInMetres = LatLonHelper.convertMetresToDecimalDegree(finestResInMetres);
         for (int radix=2;radix<=36;radix++) {
             if (radix == 2 || radix == 17) {
                 System.out.printf("%n%6s %8s %6s %11s %11s %8s %6s %11s %11s%n", "Radix", "Width", "Scale", "Max Reso", "Largest", "Width", "Scale", "Max Reso", "Largest");
