@@ -2,6 +2,7 @@
 .project
 .classpath
 .settings
+.vscode
 ~$radix_calcs.xlsx
 build
 geo-api/bak
