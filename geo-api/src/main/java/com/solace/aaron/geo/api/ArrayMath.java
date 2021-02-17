@@ -1,7 +1,11 @@
 package com.solace.aaron.geo.api;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.IntStream;
 
 /**
  * Ok, this class was made because we now support multiple "targets" in the geo-filtering
@@ -75,6 +79,25 @@ final class ArrayMath {
         }
         return retArray;
     }
+
+    public static final double[] min(double[] da1, double val) {
+        double[] retArray = new double[da1.length];
+        for (int i=0;i<da1.length;i++) {
+            retArray[i] = Math.min(da1[i],val);
+        }
+        return retArray;
+    }
+
+    public static final double[] calculateCombinedRatio(double[] over, double[] under) {
+        assert over.length == under.length;
+        double[] retArray = new double[over.length];
+        for (int i=0;i<over.length;i++) {
+            //retArray[i] = over[i] + (2 * under[i]);
+            //retArray[i] = over[i] + ((1.0 / (1 - Math.pow(under[i],1))) - 1);
+            retArray[i] = over[i] + (2.0 * ((1.0 / (1 - Math.pow(under[i],1))) - 1));
+        }
+        return retArray;
+    }
     
     /**
      * Returns true if all elements of da are less than val.
@@ -82,10 +105,18 @@ final class ArrayMath {
      * @param val
      * @return true if all elements of da are less than val.
      */
-    public static final boolean lessThan(double [] da, double val) {
+    public static final boolean lessThan(double[] da, double val) {
         boolean allGood = true;
         for (int i=0;i<da.length;i++) {
             allGood = allGood & da[i] < val;
+        }
+        return allGood;
+    }
+
+    public static final boolean lessThanIgnore(double[] da, double val, Set<Integer> ignore) {
+        boolean allGood = true;
+        for (int i=0;i<da.length;i++) {
+            allGood = allGood & (da[i] < val | ignore.contains(i));
         }
         return allGood;
     }
@@ -96,7 +127,7 @@ final class ArrayMath {
      * @param val
      * @return
      */
-    private static final Set<Integer> lessThanSet(double [] da, double val) {
+    private static final Set<Integer> lessThanSet(double[] da, double val) {
         Set<Integer> retSet = new HashSet<>();
         for (int i=0;i<da.length;i++) {
             if (da[i] < val) {
@@ -109,7 +140,7 @@ final class ArrayMath {
     /**
      * Returns true if at least one value inside the array is greater than val.
      */
-    private static final boolean moreThan(double [] da, double val) {
+    private static final boolean moreThan(double[] da, double val) {
         boolean allGood = true;
         for (int i=0;i<da.length;i++) {
             allGood = allGood & da[i] > val;
@@ -124,7 +155,7 @@ final class ArrayMath {
      * @param val
      * @return
      */
-    private static final Set<Integer> moreThanSet(double [] da, double val) {
+    private static final Set<Integer> moreThanSet(double[] da, double val) {
         Set<Integer> retSet = new HashSet<>();
         for (int i=0;i<da.length;i++) {
             if (da[i] > val) {
@@ -153,6 +184,13 @@ final class ArrayMath {
             }
         }
         return index;
+    }
+
+    public static int[] getArrayIndexReverseOrder(double[] da) {
+        int[] sortedIndices = IntStream.range(0, da.length)
+                .boxed().sorted((i, j) -> Double.compare(da[j], da[i]) )
+                .mapToInt(ele -> ele).toArray();
+        return sortedIndices;
     }
 
     

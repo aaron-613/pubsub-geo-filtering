@@ -51,7 +51,7 @@ import java.util.List;
  * @author Aaron Lee
  *
  */
-public class GeoStringFormatter {
+public final class GeoStringFormatter {
 
     
     
@@ -67,7 +67,7 @@ public class GeoStringFormatter {
      * </ul>
      * which will give you a range of (-100,1000)
      */
-    public static class RadixBuilder {
+    public static class Builder {
         
         private int radix = 10;
         private int width = 9;
@@ -76,15 +76,15 @@ public class GeoStringFormatter {
         
         // default constructor
         
-        public RadixBuilder radix(int radix) {
+        public Builder radix(int radix) {
             if (radix <= 1 || radix > 36) {
-                throw new IllegalArgumentException(String.format("Invalid value of radix (%d), must be in [2..36]",radix));
+                throw new IllegalArgumentException(String.format("Invalid value of radix '%d', must be in [2..36]",radix));
             }
             this.radix = radix;
             return this;
         }
         
-        public RadixBuilder width(int width) {
+        public Builder width(int width) {
             if (width <= 0 || width > 64) {
                 throw new IllegalArgumentException(String.format("Invalid value of width (%d), must be in [1..64]",width));
             }
@@ -92,12 +92,13 @@ public class GeoStringFormatter {
             return this;
         }
         
-        public RadixBuilder scale(int scale) {
+        public Builder scale(int scale) {
             this.scale = scale;
             return this;
         }
 
-        public RadixBuilder offset(int offset) {
+        /** E.g. if wanting to represent a range -180..180, and no negative numbers in representation, then use offset -180. */
+        public Builder offset(int offset) {
             this.offset = offset;
             return this;
         }
@@ -125,15 +126,15 @@ public class GeoStringFormatter {
         
         String debugConvert(double val) {
             GeoStringFormatter formatter = build();
-            return String.format("%s, conver() val=%f ==> '%s'", formatter, val, formatter.convert(val));
+            return String.format("%s, convert(%f) ==> '%s'", formatter, val, formatter.convert(val));
         }
 
         String debugGetInner(String radixString) {
-            return String.format("%s, getInner() radixString='%s' ==> %f", toString(), radixString, getInner(radixString));
+            return String.format("%s, getInner('%s') ==> %s", toString(), radixString, Double.toString(getInner(radixString)));
         }
 
         String debugGetOuter(String radixString) {
-            return String.format("%s, getOuter() radixString='%s' ==> %s", toString(), radixString, Double.toString(getOuter(radixString)));
+            return String.format("%s, getOuter('%s') ==> %s", toString(), radixString, Double.toString(getOuter(radixString)));
         }
     }
     // END OF HELPER /////////////////////////////////////////////////////////////////////
@@ -164,7 +165,7 @@ public class GeoStringFormatter {
         this.scale = scale;
         this.multiplier = Math.pow(radix, scale);
         this.width = width;
-        this.offset = offset;  // e.g. offset==-180 (longitude)
+        this.offset = offset;  // e.g. offset == 180 (for longitude [-180..180])
         this.offsetMultiplier = -offset * Math.pow(radix,scale);
         assert width > 0 : "width must be > 0, but width=="+width;
         assert radix >= 2 && radix <= 36 : "radix must be in [2,36], but radix=="+radix;
@@ -209,7 +210,7 @@ public class GeoStringFormatter {
     
     @Override
     public String toString() {
-        return String.format("[%f..%f), radix=%d, width=%d, scale=%d, offset=%d, with '.'?=%b",getInner(""),getOuter(""),radix,width,scale,offset,includeDecimal);
+        return String.format("(%f..%f), radix=%d, width=%d, scale=%d, offset=%d, with '.'?=%b",getInner(""),getOuter(""),radix,width,scale,offset,includeDecimal);
     }
 
     /**
@@ -217,25 +218,23 @@ public class GeoStringFormatter {
      */
     public double getInner(final String radixString) {
         if (radixString.isEmpty()) {  // special case
-            // So, it used to return just "offset", but now that we're including negative numbers,
+            // Since allowing negative numbers, this must cover the full range.
             // we need to return the outer for the 1st level.
-            // getOuter("0") == getOuter("-9") for decimal or ("-1") for binary
-            return getOuter("0") * -1 + offset;
+            return getOuter("-");
         } else if (radixString.length() > width) {
             throw new IllegalArgumentException(String.format("radixString '%s' has length %d, but max width==%d : %s",radixString,radixString.length(),width,toString()));
-        } else if (radixString.length() == 1 && radixString.charAt(0) == '-') {  // can't parse with parseLong()
+        } else if (radixString.length() == 1 && radixString.charAt(0) == '-') {  // another special case, can't parse with parseLong()
             return offset;  // usually just 0
         }
         try {
-            long valLong = Long.parseLong(radixString,radix);  // always positive
-            //assert valLong >= 0;
+            long valLong = Long.parseLong(radixString,radix);
             long valShift = (long)Math.pow(radix,width-radixString.length());  // width always > radixString.length(), so positive
             return ((valLong * valShift) - offsetMultiplier) / multiplier;
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("Couldn't parse a Long, are you sure this string is correct?",e);
         }
     }
-    
+
     /**
      * 
      */
@@ -247,13 +246,14 @@ public class GeoStringFormatter {
         if (radixString.isEmpty()) {
             return Math.pow(radix,factor) + offset;  // empty string, then whatever the max is
         } else if (radixString.length() == 1 && radixString.charAt(0) == '-') {  // can't parse with parseLong()
-            return -1 * getOuter("0");
+            return (-1 * (getOuter("0") - offset)) + offset;
         }
         try {
             long vall = Math.abs(Long.parseLong(radixString,radix)) + 1;
             long valo = (long)Math.pow(radix,width-radixString.length());  // width always > radixString.length(), so positive
             if (radixString.charAt(0) == '-') {  // is negative
-                return -1 * (((vall * valo) - offsetMultiplier) / multiplier);
+                // return -1 * (((vall * valo) - offsetMultiplier) / multiplier);
+                return (-1 * ((((vall * valo) - offsetMultiplier) / multiplier) - offset)) + offset;
             } else {
                 return ((vall * valo) - offsetMultiplier) / multiplier;
             }
@@ -305,10 +305,6 @@ public class GeoStringFormatter {
         assert realValue >= getMinValue();
         final long shift = (long)Math.round(realValue*multiplier) + (long)offsetMultiplier;  // so, if radix=10, scale=3, multiplier=1000, offset=0, 123.456 --> 123456
         try {
-//            if (shift < 0) {
-//                String errMsg = String.format("%s underflow error: val=%f < MIN=%f (shift=%d) : %s",this.getClass().getSimpleName(),val,getInner(""),shift,this.toString());
-//                throw new IllegalArgumentException(errMsg);
-//            }
             String converted = Long.toString(shift,radix);
             if (converted.length() > width) {
                 String errMsg = String.format("%s overflow error: val=%f >= MAX=%f (length=%d) : %s",this.getClass().getSimpleName(),realValue,getOuter(""),converted.length(),this.toString());

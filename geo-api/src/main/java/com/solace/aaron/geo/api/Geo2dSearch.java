@@ -11,7 +11,7 @@ import org.locationtech.jts.geom.Geometry;
  * of the standard decimal placement.
  * 
  */
-public class Geo2dSearchEngine {
+public class Geo2dSearch {
 
     
     /** Tested with 2, 4, 8, 10, and 16 **/
@@ -23,7 +23,7 @@ public class Geo2dSearchEngine {
     private final GeoStringFormatter xStringFormatter;
     private final GeoStringFormatter yStringFormatter;
     
-    private static final Logger logger = LogManager.getLogger(Geo2dSearchEngine.class);
+    private static final Logger logger = LogManager.getLogger(Geo2dSearch.class);
 
     
     /**
@@ -36,7 +36,7 @@ public class Geo2dSearchEngine {
      * @param xOffset this is how much to shift the numbers "to the left" or negative... i want to change this
      * @param yOffset
      */
-    public Geo2dSearchEngine(int radix, int scale, int xWidth, int xOffset, int yWidth, int yOffset) {
+    public Geo2dSearch(int radix, int scale, int xWidth, int xOffset, int yWidth, int yOffset) {
         logger.info("### Starting create Geo2dSearchEngine");
         this.radix = radix;
         this.scale = scale;  // what is the offset, for the various later calculations?
@@ -44,19 +44,30 @@ public class Geo2dSearchEngine {
         this.yWidth = yWidth;
 //        this.xStringFormatter = new RadixStringFormatter(radix, xWidth, scale, xOffset);
 //        this.yStringFormatter = new RadixStringFormatter(radix, yWidth, scale, yOffset);
-        this.xStringFormatter = new GeoStringFormatter.RadixBuilder().
+        this.xStringFormatter = new GeoStringFormatter.Builder().
             radix(this.radix).width(this.xWidth).scale(this.scale).offset(xOffset).build();
-        this.yStringFormatter = new GeoStringFormatter.RadixBuilder().
+        this.yStringFormatter = new GeoStringFormatter.Builder().
             radix(this.radix).width(this.yWidth).scale(this.scale).offset(yOffset).build();
+        logger.info("Initializing {} with Bounds {}",this.getClass().getSimpleName(),getBounds());
     }
 
-    public Geo2dSearchEngine(int scale, int xWidth, int yWidth) {
+    public static Geo2dSearch buildDecimalGeo2dSearch(int scale, int xWidth, int yWidth) {
+        return new Geo2dSearch(scale, xWidth, yWidth);
+    }
+
+    private Geo2dSearch(int scale, int xWidth, int yWidth) {
         this.radix = 10;
         this.scale = scale;
         this.xWidth = xWidth;
         this.yWidth = yWidth;
         this.xStringFormatter = GeoStringFormatter.buildRegularDecimalFormatter(xWidth, scale);
         this.yStringFormatter = GeoStringFormatter.buildRegularDecimalFormatter(yWidth, scale);
+        logger.info("Initializing {} with Bounds {}",this.getClass().getSimpleName(),getBounds());
+    }
+
+    public Rect getBounds() {
+        return new Rect(xStringFormatter.getMinValue(),yStringFormatter.getMinValue(),
+                xStringFormatter.getMaxValue(),yStringFormatter.getMaxValue());
     }
     
     public int getRadix() {
@@ -96,7 +107,7 @@ public class Geo2dSearchEngine {
         for (int i=0;i<targets.size();i++) {
             targetCopy[i] = targets.get(i).copy();//.buffer(0.2);  // make a deep copy of the geometries so they can't be modified afterwards
         }
-        Geo2dSearch search = new Geo2dSearch(this,targetCopy);
+        Geo2dSearchEngine search = new Geo2dSearchEngine(this,targetCopy);
         return search.splitToRatio(completionRatio,maxSubs);
     }
     

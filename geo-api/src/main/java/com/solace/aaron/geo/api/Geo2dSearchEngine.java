@@ -28,16 +28,16 @@ import org.locationtech.jts.geom.Polygon;
  * @author Aaron Lee
  *
  */
-class Geo2dSearch {
+class Geo2dSearchEngine {
 
     private static final double CUT_OFF_COVERAGE_RATIO = 0.9995;  // no point in splitting if above this. don't use 1.0 in case of float round error
 
-    private static final Logger logger = LogManager.getLogger(Geo2dSearch.class);
+    private static final Logger logger = LogManager.getLogger(Geo2dSearchEngine.class);
     private static final GeometryFactory GEOMETRY_FACTORY = new GeometryFactory();
 
     private final RadixGridRatioComparator SORT_COMPARATOR = new RadixGridRatioComparator();
     
-    private final Geo2dSearchEngine engine;  // the Engine we're using, preconfigured with the radix, dimensions, scale, etc.
+    private final Geo2dSearch search;  // the Search we're using, preconfigured with the radix, dimensions, scale, etc.
     private final Geometry[] targets;        // an array of targets that we are using
     private final RadixGrid rootNode;        // the absolute root node of the whole RadixGrid search, which will be split
     private int curNumberSubs;               // running total for the current number of subscriptions, rather than recalculating recursively each loop
@@ -50,10 +50,12 @@ class Geo2dSearch {
     double[] underAreas;      // total area where subs are "inside" the target area (i.e. not covered)
     double[] underRatios;     // ratio of underArea vs. targetArea
     double[] combinedRatios;  // a combination of overRatios and underRatios.  underRatios are given a x2 multiplier to decrease the amount the subs can be "under" the target.
-    int worstIndex;           // which target is the "worst", has the worst combinedRatio. Recalculated after each loop.
+    int worstTargetIndex;           // which target is the "worst", has the worst combinedRatio. Recalculated after each loop.
+    Set<Integer> ignoreTargetSet = new HashSet<>();  // for the rare occasion when one target cannot be split anymore
+
     
-    Geo2dSearch(Geo2dSearchEngine engine, Geometry[] targets) {
-        this.engine = engine;
+    Geo2dSearchEngine(Geo2dSearch search, Geometry[] targets) {
+        this.search = search;
         //this.targets = new Geometry[] {targets[0]};
         this.targets = targets;
         
@@ -63,15 +65,14 @@ class Geo2dSearch {
                 Geometry intersection = this.targets[i].intersection(this.targets[j]);
                 if (intersection.getArea() > 0) {
                     System.err.println(intersection);
-                    //this.targets[i] = this.targets[i].difference(this.targets[j]);
                     this.targets[j] = this.targets[j].difference(this.targets[i]);
 //                    throw new AssertionError("input target shapes are overlapping. can only be touching at vertices/edges.");
                 }
             }
             for (Coordinate coord : this.targets[i].getCoordinates()) {
                 // this will check if anything is outside our bounds defined by the range of the formatter
-                engine.getXStringFormatter().convert(coord.x);
-                engine.getYStringFormatter().convert(coord.y);
+                search.getXStringFormatter().convert(coord.x);
+                search.getYStringFormatter().convert(coord.y);
 //                logger.debug("Coord X: {} --> '{}'",coord.x,engine.getXStringFormatter().convert(coord.x));
 //                logger.debug("Coord Y: {} --> '{}'",coord.y,engine.getYStringFormatter().convert(coord.y));
             }
@@ -79,8 +80,8 @@ class Geo2dSearch {
         
         // start with the "global" grid
         RadixGrid startNode = new RadixGrid(this.targets,
-                engine.getXStringFormatter().buildStartingRange(),
-                engine.getYStringFormatter().buildStartingRange()
+                search.getXStringFormatter().buildStartingRange(),
+                search.getYStringFormatter().buildStartingRange()
 //                engine.getXFixedScale()-engine.getXFixedWidth(),
 //                engine.getYFixedScale()-engine.getYFixedWidth()
                 );
@@ -102,64 +103,94 @@ class Geo2dSearch {
 //        curAreas2 = startNode.getActualAreaRecursive(DepthOfCalc.ACTUAL);
         overAreas = startNode.getOverCoverageAreas(Depth.SINGLE);
         underAreas = startNode.getUnderCoverageAreas(Depth.SINGLE);
-        crunchRatios();
+        calculateRatios(ignoreTargetSet);
     }
     
-    private void crunchRatios() {
+    /** 
+     * Helper function to calculate the various ratios of polygons/targets intersecting the various
+     * grids. Used to determine if we need to stop recursing.
+     */
+    private void calculateRatios(Set<Integer> ignoreTargets) {
         overRatios = ArrayMath.divide(overAreas,targetAreas);
-        underRatios = ArrayMath.divide(underAreas,targetAreas);
-        combinedRatios = ArrayMath.add(overRatios,ArrayMath.multiply(underRatios,2));
-        worstIndex = ArrayMath.getMaxIndex(combinedRatios);
+        underRatios = ArrayMath.min(ArrayMath.divide(underAreas,targetAreas),1);
+        // combinedRatios = ArrayMath.add(overRatios,ArrayMath.multiply(underRatios,2));
+        combinedRatios = ArrayMath.calculateCombinedRatio(overRatios,underRatios);
+        if (ignoreTargets.isEmpty()) {
+            worstTargetIndex = ArrayMath.getMaxIndex(combinedRatios);
+        } else {  // some targets we are ignoring (e.g. have run out of grids to split for them)
+            int[] sortedIndices = ArrayMath.getArrayIndexReverseOrder(combinedRatios);
+            for (int index : sortedIndices) {
+                if (!ignoreTargets.contains(index)) {
+                    worstTargetIndex = index;
+                    break;
+                }
+            }
+        }
     }
     
+    /**
+     * Of all the targets that we are approximating with 
+     * @param grid
+     * @return
+     */
     private boolean doesWorstTargetTouch(RadixGrid grid) {
-        int worstTargetIndex = ArrayMath.getMaxIndex(combinedRatios);
-        for (com.solace.aaron.geo.api.Geo2dSearch.RadixGrid.TargetObject t : grid.sortedTargets) {
+        //int worstTargetIndex = ArrayMath.getMaxIndex(combinedRatios);
+        for (com.solace.aaron.geo.api.Geo2dSearchEngine.RadixGrid.TargetObject t : grid.sortedTargets) {
             if (t.index == worstTargetIndex) return true;
         }
         return false;
     }
     
-    public Geo2dSearchResult splitToRatio(final double completionRatio, final int maxSubs) {
+    /**
+     * This is where the actual algorithm is run!  
+     * @param completionRatio 99% accurate? Or 70% accurate?  A float, preferably between 0.1 and 0.99.
+     * It indicates how accurately the subscriptions approximation must be to the requested target shape.
+     * @param maxSubs maximum number of subscriptions
+     * @return
+     */
+    Geo2dSearchResult splitToRatio(final double completionRatio, final int maxSubs) {
         /** The list of all grids/squares that are considered for splitting.  This will be sorted each iteration, and the top one will be split. **/
         int loop = 0;
+        int loopsThroughIterator = 0;
+        int loopsWhileIgnoringUnsplitParents = 0;
+        int[] iteratorLoops = new int[1000];
+        Arrays.fill(iteratorLoops,0);
         Set<RadixGrid> orderedSplitGrids = new LinkedHashSet<>();  // the order of how we split things
         LinkedList<RadixGrid> gridList = new LinkedList<>();  // an ordered of contenders to split
         gridList.add(rootNode);  // add the one and only first "global" grid
-        ListIterator<RadixGrid> li;
+        ListIterator<RadixGrid> gridIterator;
         long totalTime = System.nanoTime();
-        while (!gridList.isEmpty() && ((!ArrayMath.lessThan(combinedRatios,1-completionRatio) && curNumberSubs < maxSubs))) {
+        while (!gridList.isEmpty() && ((!ArrayMath.lessThanIgnore(combinedRatios,1-completionRatio,ignoreTargetSet) && curNumberSubs < maxSubs))) {
             loop++;
+            RadixGrid gridToSplit = null;  // this is the guy that we're splitting each loop
+            gridIterator = gridList.listIterator();
             logger.debug("============= Loop {} ==========",loop);
-            logger.debug("Should be splitting the first grid for Target {}",worstIndex);
-            RadixGrid gridToSplit = null;
-            li = gridList.listIterator();
+            logger.debug("Should be splitting the first grid for Target {}",worstTargetIndex);
             // we only want to split a grid for the target that is currently has the worst ratio
-            while (li.hasNext() && gridToSplit == null) {  // while the list has more elements, or the grid hasn't been chosen yet
-                RadixGrid grid = li.next();
-                if (doesWorstTargetTouch(grid)) {  // for the worst-ratio target, does this grid touch it?
+            while (gridIterator.hasNext() && gridToSplit == null) {  // while the list has more elements, or the grid hasn't been chosen yet
+                RadixGrid gridToConsider = gridIterator.next();
+                loopsThroughIterator++;
+                iteratorLoops[loop]++;
+                if (doesWorstTargetTouch(gridToConsider)) {  // for the worst-ratio target, does this grid touch it?
                     // if so, remove it, and let's split it!
-                    li.remove();
-                    gridToSplit = grid;
-                } else if (grid.children.size()==1) {  // or maybe split this guy since he has exactly 1 child, and so #subs == same
-                    if (!grid.parent.hasSplit) {  // but the parent hasn't split yet (indicating parent has #radix children)
+                    gridToSplit = gridToConsider;
+                    gridIterator.remove();
+                } else if (gridToConsider.children.size()==1) {  // or maybe split this guy since he has exactly 1 child, and so #subs == same
+                    if (!gridToConsider.parent.hasSplit) {  // but the parent hasn't split yet (indicating parent has #radix children)
                         // ignore it!
+                        loopsWhileIgnoringUnsplitParents++;
                     } else {
                         // parent has split, so this is a free split (replacing 'this' with single child)
-                        li.remove();
-                        gridToSplit = grid;
+                        gridToSplit = gridToConsider;
+                        gridIterator.remove();
                     }
                 }
             }
             if (gridToSplit == null) {
-                gridToSplit = gridList.removeFirst();
-            }
-            if (loop == 15) {
-                System.out.print("");
+                ignoreTargetSet.add(worstTargetIndex);
+                gridToSplit = gridList.removeFirst();  // just choose whatevers next
+                //logger.warn("Breaking out of loop");
                 //break;
-            }
-            if (gridToSplit.xRange.getInner() == 1 && gridToSplit.yRange.getInner() == 0) {
-                System.out.print("");
             }
             if (gridToSplit.done) {
                 logger.fatal("Throwing away, has already been processed: {}",gridToSplit);
@@ -203,7 +234,7 @@ class Geo2dSearch {
 //            logger.debug("CurArea deltas: "+Arrays.toString(ArrayMath.subtract(curAreas2,curAreas)));
             overAreas = ArrayMath.add(overAreas,gridToSplit.getOverCoverageAreas(Depth.RECURSIVE));
             underAreas = ArrayMath.add(underAreas,gridToSplit.getUnderCoverageAreas(Depth.RECURSIVE));
-            crunchRatios();
+            calculateRatios(ignoreTargetSet);
 
             logger.debug("OverRatio: "+Arrays.toString(overRatios));
             logger.debug("UnderRatio: "+Arrays.toString(underRatios));
@@ -216,19 +247,23 @@ class Geo2dSearch {
             // this section of code is to insert the new grids to consider into the main list in proper order
             // we don't use Collections.sort() anymore
             int leadGuy = 0;  // this will be the index of something
-            li = gridList.listIterator();  // all the grids to consider
-            while (li.hasNext() && leadGuy < newGridsToConsider.size()) {  // while there's still more and 
-                RadixGrid next = li.next();  // grab the next guy
-                li.previous();  // back up the iterator
+            gridIterator = gridList.listIterator();  // all the grids to consider
+            while (gridIterator.hasNext() && leadGuy < newGridsToConsider.size()) {  // while there's still more and 
+                RadixGrid next = gridIterator.next();  // grab the next guy
+                gridIterator.previous();  // back up the iterator
                 while (leadGuy < newGridsToConsider.size() &&
                         SORT_COMPARATOR.buildIntersectionRatio(newGridsToConsider.get(leadGuy)) > SORT_COMPARATOR.buildIntersectionRatio(next)) {
-                    li.add(newGridsToConsider.get(leadGuy++));
+                    gridIterator.add(newGridsToConsider.get(leadGuy++));
                 }
-                li.next();
+                gridIterator.next();
             }
             // finally, stick the leftover guys at the back of the list
             gridList.addAll(newGridsToConsider.subList(leadGuy,newGridsToConsider.size()));
         }
+        // ALL DONE!
+        logger.info("LOOPS through iterator: {}",loopsThroughIterator);
+        logger.info("LOOPS ignoring parents: {}",loopsWhileIgnoringUnsplitParents);
+        logger.info("LOOPS for each LOOP: {}",Arrays.toString(iteratorLoops));
         logger.info("$$$$ TOTAL TIME: {}ms, LOOPS: {}",(System.nanoTime()-totalTime)/1000000,loop);
         int tot = 0;
         for (int i=0;i<targets.length;i++) {
@@ -384,8 +419,8 @@ class Geo2dSearch {
      */
     class RadixGridRatioComparator implements Comparator<RadixGrid> {
         
-        public double buildIntersectionRatio(Geo2dSearch.RadixGrid grid) {
-            return ((1-grid.staticCoverageRatio) * grid.getGridArea() * Math.pow(engine.getRadix(),Math.abs(grid.getXFactor()-grid.getYFactor())/2)) / (grid.getNumChildrenIfSplit()-1);  // so if num children == 1, makes it positive infinity... forces spitting
+        public double buildIntersectionRatio(Geo2dSearchEngine.RadixGrid grid) {
+            return ((1-grid.staticCoverageRatio) * grid.getGridArea() * Math.pow(search.getRadix(),Math.abs(grid.getXFactor()-grid.getYFactor())/2)) / (grid.getNumChildrenIfSplit()-1);  // so if num children == 1, makes it positive infinity... forces spitting
 //            return ((1-grid.staticCoverageRatio) * grid.getGridArea() * Math.pow(engine.getRadix(),Math.abs(grid.xFactor-grid.yFactor)/2)) / (grid.getNumChildrenIfSplit()-1);  // so if num children == 1, makes it positive infinity... forces spitting
 //            return (1-grid.staticCoverageRatio) * grid.getGridArea() / (grid.getNumChildrenIfSplit()-1);  // so if num children == 1, makes it positive infinity... forces spitting
 //            return (1-grid.staticCoverageRatio) * grid.getGridArea() / (grid.getNumChildren()-1);  // so if num children == 1, makes it positive infinity... forces spitting
@@ -394,7 +429,7 @@ class Geo2dSearch {
         }
 
         @Override
-        public int compare(Geo2dSearch.RadixGrid a, Geo2dSearch.RadixGrid b) {
+        public int compare(Geo2dSearchEngine.RadixGrid a, Geo2dSearchEngine.RadixGrid b) {
             double ar = buildIntersectionRatio(a);
             double br = buildIntersectionRatio(b);
             if (ar > br) return -1;
@@ -446,7 +481,7 @@ class Geo2dSearch {
         // VARIABLES //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         private RadixGrid parent = null;
-        private final Geometry[] trimmedTargets = new Geometry[Geo2dSearch.this.targets.length];
+        private final Geometry[] trimmedTargets = new Geometry[Geo2dSearchEngine.this.targets.length];
         private final GeoStringFormatter.Range xRange;
         private final GeoStringFormatter.Range yRange;
 //        private final int xFactor; // this is essentially the depth... level = 0 -> no decimal places, lev 1...
@@ -616,22 +651,22 @@ class Geo2dSearch {
 
         
         private void buildChildren() {
-            if (xRange.getWidth() == engine.getXMaxWidth() && yRange.getWidth() == engine.getYMaxWidth()) {  // can't split any further
+            if (xRange.getWidth() == search.getXMaxWidth() && yRange.getWidth() == search.getYMaxWidth()) {  // can't split any further
                 return;  // don't go down further after however many decimal places of accuracy!
             }
             // so both ranges can't be maxed out... is it either though?
-            if (xRange.getWidth() == engine.getXMaxWidth()) {
+            if (xRange.getWidth() == search.getXMaxWidth()) {
                 stripeDirection = StripeDirection.HORIZONTAL;
-            } else if (yRange.getWidth() == engine.getYMaxWidth()) {
+            } else if (yRange.getWidth() == search.getYMaxWidth()) {
                 stripeDirection = StripeDirection.VERTICAL;
             }
             
             // temp objects... used to potentially split both horizontally and vertically and see how it goes
-            List<RadixGrid> vertKids = new ArrayList<>(engine.getRadix());
+            List<RadixGrid> vertKids = new ArrayList<>(search.getRadix());
             double vertCoverageSum = 0;
             int vertFullCoverageKidCount = 0;
             Set<Integer> vertIndexes = new HashSet<>();
-            List<RadixGrid> horizKids = new ArrayList<>(engine.getRadix());
+            List<RadixGrid> horizKids = new ArrayList<>(search.getRadix());
             double horizCoverageSum = 0;
             int horizFullCoverageKidCount = 0;
             Set<Integer> horizIndexes = new HashSet<>();
@@ -677,7 +712,7 @@ class Geo2dSearch {
             if (stripeDirection == StripeDirection.TBD) {  // haven't decided yet...
                 assert vertKids.size() > 0;  // there has to be at least one intersection
                 assert horizKids.size() > 0;
-                if (RadixUtils.lookupInverseFactors(engine.getRadix(),Math.abs(getXFactor()-getYFactor())) >= 0.02) {  // NEW i.e. not too skinny
+                if (RadixUtils.lookupInverseFactors(search.getRadix(),Math.abs(getXFactor()-getYFactor())) >= 0.02) {  // NEW i.e. not too skinny
                     if (vertKids.size() == horizKids.size()) {  // dang, same number of kids
                         if (vertFullCoverageKidCount == horizFullCoverageKidCount) {  // double dang, same number of full rows/cols
 //                        if (RadixUtils.lookupInverseFactors(engine.getRadix(),Math.abs(xFactor-yFactor)) >= 0.1) {  // NEW i.e. not too skinny
@@ -738,11 +773,11 @@ class Geo2dSearch {
         }
         
         private int getXFactor() {
-            return xRange.getWidth() - engine.getXShift();
+            return xRange.getWidth() - search.getXShift();
         }
         
         private int getYFactor() {
-            return yRange.getWidth() - engine.getYShift();
+            return yRange.getWidth() - search.getYShift();
         }
 
         @Override
@@ -779,23 +814,23 @@ class Geo2dSearch {
 
         String debugDraw() {
             StringBuilder sb = new StringBuilder("+");
-            for (int i=0;i<engine.getRadix();i++) {
+            for (int i=0;i<search.getRadix();i++) {
                 sb.append("--");
             }
             sb.append(String.format("+%n"));
-            for (int y=engine.getRadix()-1;y>=0;y--) {
+            for (int y=search.getRadix()-1;y>=0;y--) {
                 sb.append('|');
-                for (int x=0;x<engine.getRadix();x++) {
+                for (int x=0;x<search.getRadix();x++) {
                     RadixGrid temp = new RadixGrid(this,
-                            engine.getXStringFormatter().buildDebugRange(xRange.getVal()+GeoStringFormatter.radixCharConvert(x)),
-                            engine.getYStringFormatter().buildDebugRange(yRange.getVal()+GeoStringFormatter.radixCharConvert(y)));
+                            search.getXStringFormatter().buildDebugRange(xRange.getVal()+GeoStringFormatter.radixCharConvert(x)),
+                            search.getYStringFormatter().buildDebugRange(yRange.getVal()+GeoStringFormatter.radixCharConvert(y)));
                     if (temp.intersects()) sb.append("()");
                     else sb.append("  ");
                 }
                 sb.append(String.format("|%n"));
             }
             sb.append("+");
-            for (int i=0;i<engine.getRadix();i++) {
+            for (int i=0;i<search.getRadix();i++) {
                 sb.append("--");
             }
             sb.append(String.format("+%n"));
@@ -829,7 +864,7 @@ class Geo2dSearch {
             assert !done;
             assert children != null;  // these should have been defined a while ago
             boolean shouldSplit = true;
-            if (getNumChildren() == engine.getRadix()) {// && numIntersectedTargets == 1) {
+            if (getNumChildren() == search.getRadix()) {// && numIntersectedTargets == 1) {
                 // only split if all the children are owned by the same target
                 Set<Integer> targetIndexes = new HashSet<>();
                 for (RadixGrid child : children) {
@@ -1006,7 +1041,7 @@ class Geo2dSearch {
          */
         private double getGridArea() {
             int areaFactor = getXFactor() + getYFactor();
-            double area = RadixUtils.lookupInverseFactors(engine.getRadix(),areaFactor);
+            double area = RadixUtils.lookupInverseFactors(search.getRadix(),areaFactor);
             return area;
         }
         
@@ -1019,7 +1054,7 @@ class Geo2dSearch {
             Arrays.fill(areas,0);
             final int childAreaFactor = getXFactor() + getYFactor() + 1;
             for (RadixGrid child : children) {
-                areas[child.getBiggestIntersectedTarget()] += RadixUtils.lookupInverseFactors(engine.getRadix(),childAreaFactor);
+                areas[child.getBiggestIntersectedTarget()] += RadixUtils.lookupInverseFactors(search.getRadix(),childAreaFactor);
 //                areas[child.getBiggestIntersectedTarget()] += RadixUtils.lookupInverseFactors(engine.getRadix(),xFactor+yFactor+1);
             }
             // so would be this square less, plus a grid for each of the children.  or, how many children are missing

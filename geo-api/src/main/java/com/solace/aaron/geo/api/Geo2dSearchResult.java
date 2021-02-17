@@ -9,7 +9,7 @@ import java.util.Map;
 
 import org.locationtech.jts.geom.Geometry;
 
-import com.solace.aaron.geo.api.Geo2dSearch.RadixGrid;
+import com.solace.aaron.geo.api.Geo2dSearchEngine.RadixGrid;
 
 /**
  * This class represents the result of performing a run with the geo[metric|spatial] algorithm.
