@@ -71,8 +71,10 @@ class Geo2dSearchEngine {
             }
             for (Coordinate coord : this.targets[i].getCoordinates()) {
                 // this will check if anything is outside our bounds defined by the range of the formatter
-                search.getXStringFormatter().convert(coord.x);
-                search.getYStringFormatter().convert(coord.y);
+                // search.getXStringFormatter().convert(coord.x);
+                // search.getYStringFormatter().convert(coord.y);
+                search.getXStringFormatter().contains(coord.x);
+                search.getYStringFormatter().contains(coord.y);
 //                logger.debug("Coord X: {} --> '{}'",coord.x,engine.getXStringFormatter().convert(coord.x));
 //                logger.debug("Coord Y: {} --> '{}'",coord.y,engine.getYStringFormatter().convert(coord.y));
             }
@@ -207,7 +209,7 @@ class Geo2dSearchEngine {
             List<RadixGrid> newGridsToConsider = gridToSplit.split();  // DO IT!!
             Collections.sort(newGridsToConsider,SORT_COMPARATOR);  // this will be the grandchildren of the gridToSplit
             // this next block is how we build the animation showing the algorithm
-            if ("show only when actually split".equals("show only when actually split")) {
+            if (!"show only when actually split".equals("show only when actually split")) {
                 // use this block of code to show the grids splitting only when it actually splits
                 if (!gridToSplit.hasSplit) {
                     // don't add it if it hasn't split

@@ -58,6 +58,44 @@ public class GeoStringFormatterTest {
         logger.info(new GeoStringFormatter.Builder().radix(4).scale(-2).width(10).offset(0).debugConvert(123.45678));
         logger.info(new GeoStringFormatter.Builder().radix(4).scale(-3).width(10).offset(0).debugConvert(123.45678));
     }
+
+
+    @Test
+    public void rangeUnderFlowTests() {
+        // Geo2dSearch search = new Geo2dSearch(4,4,6,-1,6,-1);
+        logger.info(new GeoStringFormatter.Builder().radix(4).scale(4).width(6).offset(0).debugConvert(-3.9999));
+
+        GeoStringFormatter f = new GeoStringFormatter.Builder().radix(4).scale(4).width(6).build();
+        double d = -3.99;
+        logger.info("{} --> \"{}\"",d,f.convert(d));
+        d = -3.999;
+        logger.info("{} --> \"{}\"",d,f.convert(d));
+        d = -3.9999;
+        logger.info("{} --> \"{}\"",d,f.convert(d));
+
+        f = new GeoStringFormatter.Builder().radix(8).scale(4).width(7).build();
+        logger.info("{} --> \"{}\"",d,f.convert(d));
+
+        f = GeoStringFormatter.buildRegularDecimalFormatter(6, 3);
+        logger.info("{} --> \"{}\"",d,f.convert(d));
+        logger.info("{} --> \"{}\"",d,f.convertDecimal(d));
+
+        f = GeoStringFormatter.buildRegularDecimalFormatter(7, 4);
+        logger.info("{} --> \"{}\"",d,f.convert(d));
+        logger.info("{} --> \"{}\"",d,f.convertDecimal(d));
+
+        //12:55:08.356 [main] INFO  com.solace.aaron.geo.api.GeoStringFormatterTest - -3.9999 --> "0-399990"
+        //12:55:08.356 [main] INFO  com.solace.aaron.geo.api.GeoStringFormatterTest - -3.9999 --> "0-3.99990"
+
+        d = -1;
+        logger.info("{} --> \"{}\"",d,f.convertDecimal(d));
+        d = -0.1;
+        logger.info("{} --> \"{}\"",d,f.convertDecimal(d));
+
+
+
+    }
+
     
     @Test
     public void nothing() {

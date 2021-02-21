@@ -37,7 +37,7 @@ public class Geo2dSearch {
      * @param yOffset
      */
     public Geo2dSearch(int radix, int scale, int xWidth, int xOffset, int yWidth, int yOffset) {
-        logger.info("### Starting create Geo2dSearchEngine");
+        logger.debug("### Starting create {}",this.getClass().getSimpleName());
         this.radix = radix;
         this.scale = scale;  // what is the offset, for the various later calculations?
         this.xWidth = xWidth;
@@ -48,7 +48,7 @@ public class Geo2dSearch {
             radix(this.radix).width(this.xWidth).scale(this.scale).offset(xOffset).build();
         this.yStringFormatter = new GeoStringFormatter.Builder().
             radix(this.radix).width(this.yWidth).scale(this.scale).offset(yOffset).build();
-        logger.info("Initializing {} with Bounds {}",this.getClass().getSimpleName(),getBounds());
+        logger.info("Initialized {} with Bounds {}",this.getClass().getSimpleName(),getBounds());
     }
 
     public static Geo2dSearch buildDecimalGeo2dSearch(int scale, int xWidth, int yWidth) {

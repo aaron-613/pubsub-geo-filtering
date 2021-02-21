@@ -151,6 +151,8 @@ public final class GeoStringFormatter {
     private final double offsetMultiplier;  // since we work in "shifted" values for accuracy, need to shift the offset too
     private final boolean includeDecimal;  // only used in regular base10 notation, although could still use radix=10 to disable
     private final int digitsLeftOfDecimal;  // derived, used when building the "actual" decimal representation in getDecimalString()
+    private final double minValue;
+    private final double maxValue;
 
     /**
      * Rather than using the defined static methods, this allows you to instantiate an object that can be reused.
@@ -169,11 +171,13 @@ public final class GeoStringFormatter {
         this.offsetMultiplier = -offset * Math.pow(radix,scale);
         assert width > 0 : "width must be > 0, but width=="+width;
         assert radix >= 2 && radix <= 36 : "radix must be in [2,36], but radix=="+radix;
-        this.includeDecimal = includeDecimal;
+        this.includeDecimal = true;//includeDecimal;
         if (this.includeDecimal) {
-            assert radix == 10;
+            //assert radix == 10;
         }
         digitsLeftOfDecimal = width-scale;
+        this.minValue = getInner("");
+        this.maxValue = getOuter("");
     }
     
     public static GeoStringFormatter buildRegularDecimalFormatter(int width, int scale) {
@@ -201,11 +205,20 @@ public final class GeoStringFormatter {
     }
     
     public double getMinValue() {
-        return getInner("");
+        return minValue;
     }
     
     public double getMaxValue() {
-        return getOuter("");
+        return maxValue;
+    }
+
+    public void contains(final double realValue) {
+        if (realValue < minValue || realValue > maxValue) throw new IllegalArgumentException("OUT OF BOUNDS");
+    }
+
+    public void covers(final double realValue) {
+        if (realValue == minValue || realValue == maxValue) throw new IllegalArgumentException("ON THE BOUNDEARY");
+        contains(realValue);
     }
     
     @Override
@@ -279,8 +292,8 @@ public final class GeoStringFormatter {
     }
     
     /**
-     * <p>Use this, or use String.format();
-     * e.g. String.format("%09.5f");</p>
+     * <p>Use this method, or if scale >= 0 you can use String.format();
+     * e.g. String.format("%09.5f");  // for longitude</p>
      * 
      {@code
      formatter.convertDecimal(123.45);
@@ -292,32 +305,44 @@ public final class GeoStringFormatter {
      * 
      */
     public String convertDecimal(final double realValue) {
-        return getDecimalString(convert(realValue));
+        //return convertDecimalString(convert(realValue));
+        return String.format(String.format("%%0%d.%df",width+1,scale),realValue);
     }
 
     /**
-     * Will provide the formatted GeoString by converting the double 'realValue' 
+     * Will provide the formatted GeoString by converting the double 'realValue'.
+     * The length of the returned string will exaclty the 'width'.
      * @param realValue a double hopefully within the range of the formatter
      * @return
      */
     public String convert(final double realValue) {
         assert realValue <= getMaxValue();
         assert realValue >= getMinValue();
-        final long shift = (long)Math.round(realValue*multiplier) + (long)offsetMultiplier;  // so, if radix=10, scale=3, multiplier=1000, offset=0, 123.456 --> 123456
+        // final long shift = (long)Math.round(realValue*multiplier) + (long)offsetMultiplier;  // so, if radix=10, scale=3, multiplier=1000, offset=0, 123.456 --> 123456
+        // cannot use round, because values close to the edge won't work
+        final long shift = (long)(realValue*multiplier) + (long)offsetMultiplier;  // so, if radix=10, scale=3, multiplier=1000, offset=0, 123.456 --> 123456
         try {
             String converted = Long.toString(shift,radix);
             if (converted.length() > width) {
-                String errMsg = String.format("%s overflow error: val=%f >= MAX=%f (length=%d) : %s",this.getClass().getSimpleName(),realValue,getOuter(""),converted.length(),this.toString());
+                System.out.println(converted);
+                String errMsg = String.format("%s convert() length overflow error: val=%f -> \"%s\" >= length=%d : %s",this.getClass().getSimpleName(),realValue,converted,converted.length(),this.toString());
                 throw new IllegalArgumentException(errMsg);
             }
             // ok, so now we make the String to return
             char[] charArray = new char[width];               // first, get a char array big enough
+            if (shift < 0) {  // negative, special case... need to put the minus sign at the front
+                charArray[0] = '-';
+                // then, continue copying as before. might end up with extra - sign that we'll overwrite later
+            }
             converted.getChars(0,converted.length(),  // copy all of 'converted' val String
                     charArray,                        // into char[] charArray
                     width-converted.length());        // keeping it right-aligned
             if (converted.length() < charArray.length) {  // now pad the beginning with 0s if need be
-                // ok, so width==5, converted.length=3, need 2 extra 0's. Since there's an extra char for onlyAbs, start at index 1
-                for (int i=0;i<charArray.length-converted.length();i++) {
+                // ok, so width==5, converted.length=3, need 2 extra 0's.
+                int negativeModifier = shift < 0 ? 1 : 0;  // where to start adding the extra 0's
+                // so if positive, start adding from 0
+                // but if negative, already have minus in pos[0], so add 0's from 1, but one less length
+                for (int i=negativeModifier; i<charArray.length-converted.length()+negativeModifier; i++) {
                     charArray[i] = '0';
                 }
             }
@@ -328,13 +353,18 @@ public final class GeoStringFormatter {
         }
     }
     
-    String getDecimalString(final String geoString) {
+    /**
+     * This method is called by both the Range toString(), and the convert(double) method.
+     * @param geoString
+     * @return
+     */
+    String convertDecimalString(final String geoString) {
         assert radix == 10;
         assert offset == 0;
         assert includeDecimal == true;
         // where does the '.' go??
         // width=8, scale=5: xxx.xxxxx
-        if (geoString.length() <= digitsLeftOfDecimal) {  // too short!
+        if (geoString.length() <= digitsLeftOfDecimal) {  // too short for a decimal!
             return geoString;
         }
         // else!
@@ -392,7 +422,7 @@ public final class GeoStringFormatter {
         @Override
         public String toString() {
             if (includeDecimal) {
-                return getDecimalString(val);
+                return convertDecimalString(val);
             } else {
                 return val;
             }

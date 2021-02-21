@@ -27,8 +27,6 @@ public class NormalDecimalStringFormatterTests {
         System.out.println(f.getInner("-1"));
         System.out.println(f.getInner("001"));
         System.out.println(f.getInner("-01"));
-        
-
     }        
         
     @Test
@@ -57,15 +55,15 @@ public class NormalDecimalStringFormatterTests {
         System.out.println("Here are some decimal tests");
         GeoStringFormatter f = GeoStringFormatter.buildRegularDecimalFormatter(8,5);
         
-        System.out.println(f.getDecimalString("01234"));
-        System.out.println(f.getDecimalString("-12345"));
-        System.out.println(f.getDecimalString("0012345"));
-        System.out.println(f.getDecimalString("-01324"));
-        System.out.println(f.getDecimalString("0006142"));
-        System.out.println(f.getDecimalString("011235"));
-        System.out.println(f.getDecimalString("-1762"));
-        System.out.println(f.getDecimalString("0012222"));
-        System.out.println(f.getDecimalString("-0155555"));
+        System.out.println(f.convertDecimalString("01234"));
+        System.out.println(f.convertDecimalString("-12345"));
+        System.out.println(f.convertDecimalString("0012345"));
+        System.out.println(f.convertDecimalString("-01324"));
+        System.out.println(f.convertDecimalString("0006142"));
+        System.out.println(f.convertDecimalString("011235"));
+        System.out.println(f.convertDecimalString("-1762"));
+        System.out.println(f.convertDecimalString("0012222"));
+        System.out.println(f.convertDecimalString("-0155555"));
         
     }        
 

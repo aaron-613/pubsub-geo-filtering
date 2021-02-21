@@ -28,30 +28,30 @@ public class TestGeoPublisher {
     	lon = normalizeLon(-105.87654);
         System.out.println(lat+", "+lon);
     	System.out.println(formatter.convert(lat)+", "+formatter.convert(lon));
-        System.out.println(formatter.getDecimalString(formatter.convert(lat))+", "+formatter.getDecimalString(formatter.convert(lon)));
+        System.out.println(formatter.convertDecimalString(formatter.convert(lat))+", "+formatter.convertDecimalString(formatter.convert(lon)));
         System.out.println();
         lat = 45.123454;
         lon = normalizeLon(-105.876540);
         System.out.println(lat+", "+lon);
         System.out.println(formatter.convert(lat)+", "+formatter.convert(lon));
-        System.out.println(formatter.getDecimalString(formatter.convert(lat))+", "+formatter.getDecimalString(formatter.convert(lon)));
+        System.out.println(formatter.convertDecimalString(formatter.convert(lat))+", "+formatter.convertDecimalString(formatter.convert(lon)));
         System.out.println();
         lat = 45.123455;
         lon = normalizeLon(-105.8765401);
         System.out.println(lat+", "+lon);
         System.out.println(formatter.convert(lat)+", "+formatter.convert(lon));
-        System.out.println(formatter.getDecimalString(formatter.convert(lat))+", "+formatter.getDecimalString(formatter.convert(lon)));
+        System.out.println(formatter.convertDecimalString(formatter.convert(lat))+", "+formatter.convertDecimalString(formatter.convert(lon)));
         System.out.println();
         lat = 45.123456;
         lon = normalizeLon(-105.876542);
         System.out.println(lat+", "+lon);
         System.out.println(formatter.convert(lat)+", "+formatter.convert(lon));
-        System.out.println(formatter.getDecimalString(formatter.convert(lat))+", "+formatter.getDecimalString(formatter.convert(lon)));
+        System.out.println(formatter.convertDecimalString(formatter.convert(lat))+", "+formatter.convertDecimalString(formatter.convert(lon)));
         System.out.println();
         lon = normalizeLon(-105.876545001);
         System.out.println(lat+", "+lon);
         System.out.println(formatter.convert(lat)+", "+formatter.convert(lon));
-        System.out.println(formatter.getDecimalString(formatter.convert(lat))+", "+formatter.getDecimalString(formatter.convert(lon)));
+        System.out.println(formatter.convertDecimalString(formatter.convert(lat))+", "+formatter.convertDecimalString(formatter.convert(lon)));
         System.out.println();
     	
     	

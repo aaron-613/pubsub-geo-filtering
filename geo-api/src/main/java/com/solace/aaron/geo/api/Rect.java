@@ -39,7 +39,7 @@ public final class Rect {
 
     @Override
     public String toString() {
-        return String.format("[%s,%s][%s,%s]",
+        return String.format("[%s,%s]->[%s,%s]",
                 Double.toString(x1),Double.toString(y1),Double.toString(x2),Double.toString(y2));
     }
 }
