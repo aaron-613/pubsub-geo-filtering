@@ -78,19 +78,19 @@ public class GeoStringFormatterTest {
 
         f = GeoStringFormatter.buildRegularDecimalFormatter(6, 3);
         logger.info("{} --> \"{}\"",d,f.convert(d));
-        logger.info("{} --> \"{}\"",d,f.convertDecimal(d));
+        logger.info("{} --> \"{}\"",d,f.convertDecimalUsingStringFormat(d));
 
         f = GeoStringFormatter.buildRegularDecimalFormatter(7, 4);
         logger.info("{} --> \"{}\"",d,f.convert(d));
-        logger.info("{} --> \"{}\"",d,f.convertDecimal(d));
+        logger.info("{} --> \"{}\"",d,f.convertDecimalUsingStringFormat(d));
 
         //12:55:08.356 [main] INFO  com.solace.aaron.geo.api.GeoStringFormatterTest - -3.9999 --> "0-399990"
         //12:55:08.356 [main] INFO  com.solace.aaron.geo.api.GeoStringFormatterTest - -3.9999 --> "0-3.99990"
 
         d = -1;
-        logger.info("{} --> \"{}\"",d,f.convertDecimal(d));
+        logger.info("{} --> \"{}\"",d,f.convertDecimalUsingStringFormat(d));
         d = -0.1;
-        logger.info("{} --> \"{}\"",d,f.convertDecimal(d));
+        logger.info("{} --> \"{}\"",d,f.convertDecimalUsingStringFormat(d));
 
 
 
@@ -116,7 +116,7 @@ public class GeoStringFormatterTest {
         converted = new GeoStringFormatter.Builder().radix(10).scale(6).width(10).offset(0).convert(123.45678);
         results &= converted.equals("00123456780");
        
-//        assertTrue("Check that my conversion works properly", results);
+        assertTrue("Check that my conversion works properly", results);
         
         logger.info("Showing the effect of the scale element, effectively moves the radix point");
         logger.info(new GeoStringFormatter.Builder().radix(10).scale(0).width(10).offset(0).debugConvert(123.45678));
@@ -282,6 +282,7 @@ public class GeoStringFormatterTest {
         logger.info(b.debugGetOuter("100000"));
         logger.info(b.debugGetOuter("1000000"));
 
+        assertTrue("Check that my conversion works properly", results);
 
     }
 

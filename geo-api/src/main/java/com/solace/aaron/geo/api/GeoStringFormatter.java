@@ -180,8 +180,14 @@ public final class GeoStringFormatter {
         this.maxValue = getOuter("");
     }
     
+    /** Special builder for a decimal (radix 10) Formatter with a decimal point '.' and no offset.
+     * 
+     * @param width Note that this is +1 from the general Builder case to include the '.' decimal point.
+     * @param scale How much to shift over. E.g. in range [-100,1000], then range is 3.
+     * @return
+     */
     public static GeoStringFormatter buildRegularDecimalFormatter(int width, int scale) {
-        return new GeoStringFormatter(10,width,scale,0,true);
+        return new GeoStringFormatter(10, width-1, scale, 0, true);
     }
     
     public int getRadix() {
@@ -304,7 +310,7 @@ public final class GeoStringFormatter {
      * @return this is a return
      * 
      */
-    public String convertDecimal(final double realValue) {
+    public String convertDecimalUsingStringFormat(final double realValue) {
         //return convertDecimalString(convert(realValue));
         return String.format(String.format("%%0%d.%df",width+1,scale),realValue);
     }

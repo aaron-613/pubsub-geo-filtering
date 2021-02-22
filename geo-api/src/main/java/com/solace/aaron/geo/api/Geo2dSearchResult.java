@@ -76,6 +76,7 @@ public class Geo2dSearchResult {
          * A super nested list, defining when each was added, and for which target: [loop][target][childRect][coords]
          */
         public List<List<List<List<Double>>>> added = new ArrayList<>();  // each square that was added each loop, and for which target (loop, target, childRect)
+
         /**
          * For each loop, only a single rectangle can be removed (i.e. split), 
          */
@@ -104,9 +105,6 @@ public class Geo2dSearchResult {
         // start
         int loop = 1;
         for (RadixGrid grid : orderedSplitGridList) {
-            if (loop >= 12) {
-                System.out.print("");
-            }
             // ok, so this is the grid that we're splitting, so it's being removed
             List<Integer> when = addedWhen.get(grid);  // when was he added?  will be [loop][target][childIndex]
             result.removed.add(when);  // add that 'when' information to the removedIndex so we know when this grid was added

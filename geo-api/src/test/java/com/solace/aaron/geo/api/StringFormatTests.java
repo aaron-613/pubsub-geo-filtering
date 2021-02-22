@@ -13,44 +13,45 @@ public class StringFormatTests {
 
     @Test
     public void useJavaStringFormat() {
-        logger.info("This is only useful if using a decimal GeoStringFormatter");
+        logger.info("This is only useful if using a decimal GeoStringFormatter.");
+        logger.info("Also, should really have the 0 padding, can't use spaces.");
         double d = 12.3456789;
         System.out.printf("%09.4f%n",d);
-        assertEquals(String.format("%09.4f",d),"0012.3457");
+        assertEquals("0012.3457",String.format("%09.4f",d));
         System.out.printf("%9.4f%n",d);
-        assertEquals(String.format("%9.4f",d),"  12.3457");
+        assertEquals("  12.3457",String.format("%9.4f",d));
 
         d = -12.3456789;
         System.out.printf("%09.4f%n",d);
-        assertEquals(String.format("%09.4f",d),"-012.3457");
+        assertEquals("-012.3457",String.format("%09.4f",d));
         System.out.printf("%9.4f%n",d);
-        assertEquals(String.format("%9.4f",d)," -12.3457");
+        assertEquals(" -12.3457",String.format("%9.4f",d));
         System.out.println();
         
         d = 123.456789;
         System.out.printf("%09.4f%n",d);
-        assertEquals(String.format("%09.4f",d),"0123.4568");
+        assertEquals("0123.4568",String.format("%09.4f",d));
         System.out.printf("%9.4f%n",d);
-        assertEquals(String.format("%9.4f",d)," 123.4568");
+        assertEquals(" 123.4568",String.format("%9.4f",d));
     
         d = -123.456789;
         System.out.printf("%09.4f%n",d);
-        assertEquals(String.format("%09.4f",d),"-123.4568");
+        assertEquals("-123.4568",String.format("%09.4f",d));
         System.out.printf("%9.4f%n",d);
-        assertEquals(String.format("%9.4f",d),"-123.4568");
+        assertEquals("-123.4568",String.format("%9.4f",d));
         System.out.println();
         
         d = 1234.56789;
         System.out.printf("%09.4f%n",d);
-        assertEquals(String.format("%09.4f",d),"1234.5679");
+        assertEquals("1234.5679",String.format("%09.4f",d));
         System.out.printf("%9.4f%n",d);
-        assertEquals(String.format("%9.4f",d),"1234.5679");
+        assertEquals("1234.5679",String.format("%9.4f",d));
     
         d = -1234.56789;
         System.out.printf("%09.4f%n",d);
-        assertEquals(String.format("%09.4f",d),"-1234.5679");
+        assertEquals("-1234.5679",String.format("%09.4f",d));
         System.out.printf("%9.4f%n",d);
-        assertEquals(String.format("%9.4f",d),"-1234.5679");
+        assertEquals("-1234.5679",String.format("%9.4f",d));
         System.out.println();
     
     }
