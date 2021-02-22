@@ -9,12 +9,12 @@
 // Apply the java-library plugin to add support for Java Library
 apply plugin: 'java-library'
 apply plugin: "eclipse"
+apply plugin: "idea"
 
 
-checkstyle {
+//checkstyle {
     // Go to the Google Checks link above and paste its
     // contents into checkstyle.xml
-    config = rootProject.resources.text.fromFile('buildConfig/checkstyle/checkstyle.xml')
-    toolVersion '8.34'
-
-}
+//    config = rootProject.resources.text.fromFile('buildConfig/checkstyle/checkstyle.xml')
+//    toolVersion '8.34'
+//}

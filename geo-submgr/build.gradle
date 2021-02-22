@@ -10,6 +10,7 @@
 apply plugin: 'java'
 apply plugin: 'application'
 apply plugin: "eclipse"
+apply plugin: "idea"
 
 mainClassName = 'com.solace.aaron.geo.submgr.GeoRoutingSubscriptionManager'
 

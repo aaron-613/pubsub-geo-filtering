@@ -7,7 +7,7 @@ plugins {
 configure(subprojects.findAll { it.name.startsWith('geo') }) {
 
     apply plugin: 'java'
-    apply plugin: 'checkstyle'
+//    apply plugin: 'checkstyle'
 
     dependencies {
         // for my various geometric calculations
@@ -23,6 +23,19 @@ configure(subprojects.findAll { it.name.startsWith('geo') }) {
         implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.11.1'
         // JUnit framework for unit tests
         testImplementation 'junit:junit:4.12'
+        testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.7.0")
+
+
+        testImplementation(platform('org.junit:junit-bom:5.7.0'))
+        testImplementation('org.junit.jupiter:junit-jupiter')
+
+    }
+
+    test {
+        useJUnitPlatform()
+        testLogging {
+            events "passed", "skipped", "failed"
+        }
     }
 }
 
