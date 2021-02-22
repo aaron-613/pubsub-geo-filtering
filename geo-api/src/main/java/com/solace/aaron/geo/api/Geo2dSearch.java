@@ -42,8 +42,6 @@ public class Geo2dSearch {
         this.scale = scale;  // what is the offset, for the various later calculations?
         this.xWidth = xWidth;
         this.yWidth = yWidth;
-//        this.xStringFormatter = new RadixStringFormatter(radix, xWidth, scale, xOffset);
-//        this.yStringFormatter = new RadixStringFormatter(radix, yWidth, scale, yOffset);
         this.xStringFormatter = new GeoStringFormatter.Builder().
             radix(this.radix).width(this.xWidth).scale(this.scale).offset(xOffset).build();
         this.yStringFormatter = new GeoStringFormatter.Builder().
@@ -86,11 +84,11 @@ public class Geo2dSearch {
         return scale;
     }
     
-    public int getXShift() {
+    int getXShift() {
         return xWidth-scale;
     }
     
-    public int getYShift() {
+    int getYShift() {
         return yWidth-scale;
     }
 

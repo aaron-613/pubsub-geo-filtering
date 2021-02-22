@@ -26,8 +26,13 @@ public class LatLonHelper {
         return new double[] {2*latOffset,2*lonOffset};
     }
   */  
-    /**
-     * 
+    /*
+     * used for circle calculations -- figures out how high and wide in lat/lon this circle is
+     * which would change at different latitudes... the further towards the poles you go, the more longitude degrees you
+     * need to make x metres
+     * @param centerLat
+     * @param radiusMetres
+     * @return returns a array with length=2 of doubles, where [0]=x width (lon) in decimal degrees, and [1]=height (lat) in decimal degrees
      * 
      * https://en.wikipedia.org/wiki/Geographic_coordinate_system
      * https://en.wikipedia.org/wiki/Latitude#Length_of_a_degree_of_latitude

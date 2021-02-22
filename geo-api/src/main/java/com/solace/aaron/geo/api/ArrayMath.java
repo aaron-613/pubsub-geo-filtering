@@ -186,6 +186,10 @@ final class ArrayMath {
         return index;
     }
 
+    /** 
+     * This takes in an array [ 1.0, 3.5, 2.9, +Infinity ] and returns [ 3, 1, 2, 0 ]
+     * that is, the indices of the sorted array of doubles.
+     */
     public static int[] getArrayIndexReverseOrder(double[] da) {
         int[] sortedIndices = IntStream.range(0, da.length)
                 .boxed().sorted((i, j) -> Double.compare(da[j], da[i]) )

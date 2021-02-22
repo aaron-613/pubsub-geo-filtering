@@ -13,13 +13,13 @@ public class RadixUtilsTests {
     public void someTests() {
 
         
-        System.out.println(RadixUtils.numPaddingNeeded(10,90));
-        System.out.println(RadixUtils.numPaddingNeeded(10,180));
-        System.out.println(RadixUtils.numPaddingNeeded(10,-180));
+        // System.out.println(RadixUtils.numPaddingNeeded(10,90));
+        // System.out.println(RadixUtils.numPaddingNeeded(10,180));
+        // System.out.println(RadixUtils.numPaddingNeeded(10,-180));
         
-        System.out.println(RadixUtils.calcFactor(90,10));
-        System.out.println(RadixUtils.calcFactor(180,10));
-        System.out.println(RadixUtils.calcFactor(-180,10));
+        // System.out.println(RadixUtils.calcFactor(90,10));
+        // System.out.println(RadixUtils.calcFactor(180,10));
+        // System.out.println(RadixUtils.calcFactor(-180,10));
         
         
     }

@@ -41,7 +41,7 @@ class RadixUtils {
      * @param maxRange
      * @return
      */
-    static int calcFactor(double maxRange, int radix) {
+    private static int calcFactor(double maxRange, int radix) {
         if (radix == 10) return -(int)Math.ceil(Math.log10(Math.abs(maxRange)));
         else return -(int)Math.ceil(Math.log10(Math.abs(maxRange))/Math.log10(radix));
     }
@@ -98,8 +98,7 @@ class RadixUtils {
             System.err.println("(Not an error, just a note): RadixUtils.lookupInverseFactors is out of bounds: factor "+factor+", radix "+radix);
             return 1.0/Math.pow(radix,factor);
         } catch (NullPointerException e) {
-            // this will happen when asking for any radix != 2,4,8,10,16
-            //System.err.println("ASKING FOR A NON-EXISTENT FACTOR!  "+factor+", radix "+radix);
+            System.err.println("ASKING FOR A NON-EXISTENT FACTOR!  "+factor+", radix "+radix);
             return 1.0/Math.pow(radix,factor);  // just compute it regular
         }
     }
@@ -113,7 +112,7 @@ class RadixUtils {
      * @param factor
      * @return
      */
-    static double lossOfPrecision(int radix, int factor) {
+    private static double lossOfPrecision(int radix, int factor) {
         return lookupInverseFactors(radix,factor);
     }
     
@@ -125,7 +124,7 @@ class RadixUtils {
      * @param numPadding
      * @return
      */
-    static int maxDecEquivPossible(int radix, int numPadding) {
+    private static int maxDecEquivPossible(int radix, int numPadding) {
         return (int)Math.pow(radix,numPadding)-1;
     }
     
@@ -137,7 +136,7 @@ class RadixUtils {
      * @param radix
      * @return
      */
-    static int numPaddingNeeded(int radix, int maxVal) {
+    private static int numPaddingNeeded(int radix, int maxVal) {
         int digitCount = 0;
         while (maxVal > 0) {
             maxVal /= radix;
