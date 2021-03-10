@@ -12,18 +12,47 @@ apply plugin: 'application'
 apply plugin: "eclipse"
 apply plugin: "idea"
 
-mainClassName = 'com.solace.aaron.geo.submgr.GeoRoutingSubscriptionManager'
+//sourceCompatibility = 1.8
+//targetCompatibility = 1.8
+
+// Don't need these tasks, so disabling them. Makes it possible to avoid
+// declaring a single application main class.
+startScripts.enabled = false
+run.enabled = false
+
+//mainClassName = 'com.solace.aaron.geo.submgr.GeoRoutingSubscriptionManager'
 
 dependencies {
 
     implementation project(':geo-api') 
 
-    implementation group: 'com.solacesystems', name: 'sol-jcsmp', version: '10.4.1'
+    implementation group: 'com.solacesystems', name: 'sol-jcsmp', version: '10.10.0'
 
     //implementation group: 'javax.json', name: 'javax.json-api', version: '1.1.3'
     implementation group: 'org.glassfish', name: 'javax.json', version: '1.1.3'
     implementation group: 'com.opencsv', name: 'opencsv', version: '4.6'
     implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.9'
+    implementation group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.13'
     
 }
 
+
+def scripts = [
+    'SubsReplier':'com.solace.aaron.geo.submgr.SubsReplier',
+    'GeoSubMgr':'com.solace.aaron.geo.submgr.GeoSubMgr'
+]
+scripts.each() { scriptName, className ->
+    def t = tasks.create(name: scriptName+'StartScript', type: CreateStartScripts) {
+        mainClassName = className
+        applicationName = scriptName
+        outputDir = new File(project.buildDir, 'scripts')
+        classpath = jar.outputs.files + project.configurations.runtimeClasspath
+        defaultJvmOpts = ['-ea']
+    }
+    applicationDistribution.into("bin") {
+        from(t)
+        fileMode = 0755
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    }
+    //createAllStartScripts.dependsOn(t)
+}
