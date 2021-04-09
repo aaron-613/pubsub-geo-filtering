@@ -1,14 +1,12 @@
 package com.solace.aaron.geo.submgr;
 
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -19,16 +17,14 @@ import javax.json.JsonObjectBuilder;
 import javax.json.JsonReader;
 import javax.json.JsonWriter;
 
+import com.solace.aaron.geo.api.Geo2dSearch;
+import com.solace.aaron.geo.api.Geo2dSearchResult;
+import com.solace.aaron.geo.api.Geo2dSearchResult.IncrementalSearchResult;
+
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.io.ParseException;
-import org.locationtech.jts.io.WKTReader;
-
-import com.opencsv.CSVReaderHeaderAware;
-import com.solace.aaron.geo.api.Geo2dSearch;
-import com.solace.aaron.geo.api.Geo2dSearchResult;
-import com.solace.aaron.geo.api.Geo2dSearchResult.IncrementalSearchResult;
 
 public class JsonTests {
 
