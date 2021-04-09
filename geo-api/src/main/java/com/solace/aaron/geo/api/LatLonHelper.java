@@ -1,5 +1,9 @@
 package com.solace.aaron.geo.api;
 
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.util.GeometricShapeFactory;
+
 /**
  * This utility class is used to 
  * @author AaronLee
@@ -57,4 +61,23 @@ public class LatLonHelper {
     public static double convertDecimalDegreeToMetres(double degrees) {
         return degrees * METRES_PER_DEGREE;
     }
+
+    public static Geometry buildLatLonCircleGeometry(double lat, double lon, double radiusMetres) {
+        GeometricShapeFactory shapeFactory = new GeometricShapeFactory(Geo2dSearchEngine.GEOMETRY_FACTORY);
+        shapeFactory.setCentre(new Coordinate(lon,lat));
+        shapeFactory.setWidth(getLatLonCircleDimensions2(lon,radiusMetres)[0]);  // lat offset, even though it is width, b/c order matters
+        shapeFactory.setHeight(getLatLonCircleDimensions2(lon,radiusMetres)[1]);
+        shapeFactory.setNumPoints(72);
+        return shapeFactory.createCircle();
+    }
+
+    public static Geometry buildCircleGeometry(double x, double y, double radius) {
+        GeometricShapeFactory shapeFactory = new GeometricShapeFactory(Geo2dSearchEngine.GEOMETRY_FACTORY);
+        shapeFactory.setCentre(new Coordinate(x,y));
+        shapeFactory.setWidth(radius*2);  // I guess?  We haven't tested this yet.
+        shapeFactory.setHeight(radius*2);
+        shapeFactory.setNumPoints(72);
+        return shapeFactory.createCircle();
+    }
+
 }

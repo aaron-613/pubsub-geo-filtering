@@ -50,7 +50,9 @@ import com.solacesystems.jcsmp.XMLMessageConsumer;
 import com.solacesystems.jcsmp.XMLMessageListener;
 import com.solacesystems.jcsmp.XMLMessageProducer;
 
+import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.GeometryFactory;
 
 public class SubsReplier {
 
@@ -132,7 +134,6 @@ public class SubsReplier {
             }
 
         });
-//#P2P/v:sg-sol-3501-vm/#rest-5964ed1590b30443/GET/
         // Anonymous inner-class for request handling
         final XMLMessageConsumer cons = session.getMessageConsumer(new XMLMessageListener() {
             @Override
@@ -156,7 +157,7 @@ public class SubsReplier {
                         if (radiusMetres <= 0) throw new NumberFormatException("radiusMetres "+radiusMetres+" must be greater than 0");
                         // all checks pass
                         Geometry circle = LatLonHelper.buildLatLonCircleGeometry(lon, lat, radiusMetres);
-                        Geo2dSearchResult result = search.splitToRatio(Collections.singletonList(circle), 0.9, 500);
+                        Geo2dSearchResult result = search.splitToRatio(Collections.singletonList(circle), 0.75, 500);
                         
 
 
@@ -167,6 +168,66 @@ public class SubsReplier {
                         // }
                         final String text = "Hello! Here is a response to your message on topic '" + msg.getDestination() + "'.";
                         replyMsg.setText(result.getSubs().get(0).toString());
+                        // only allowed to publish messages from API-owned (callback) thread when JCSMPProperties.MESSAGE_CALLBACK_ON_REACTOR == false
+                        producer.sendReply(msg, replyMsg);  // convenience method: copies in reply-to, correlationId, etc.
+                    } catch (NumberFormatException | NullPointerException e) {
+                        if (msg.getDestination().getName().startsWith("GET")) {  // need to send an error response
+                            try {
+                                BytesMessage replyMsg = JCSMPFactory.onlyInstance().createMessage(BytesMessage.class);  // reply with a Text
+                                SDTMap userProps = JCSMPFactory.onlyInstance().createMap();
+                                userProps.putInteger("JMS_Solace_HTTP_status_code",400);
+                                userProps.putString("JMS_Solace_HTTP_reason_phrase","Missing/invalid arguments: lat [-90,90], lon [-180,180], radiusMetres > 0; "+e.toString());
+                                replyMsg.setProperties(userProps);
+                                producer.sendReply(msg, replyMsg);  // convenience method: copies in reply-to, correlationId, etc.
+                            } catch (JCSMPException e1) {
+                                // TODO Auto-generated catch block
+                                e1.printStackTrace();
+                            }
+                        }
+                    } catch (JCSMPException e) {
+                        System.out.printf("### Caught while trying to producer.sendReply(): %s%n", e);
+                        if (e instanceof JCSMPTransportException) {  // unrecoverable
+                            isShutdown = true;
+                        }
+                    }
+                    
+                } else if (msg.getDestination().getName().contains("rect") && msg.getReplyTo() != null) {
+                    System.out.printf("Received request on '%s', generating response.%n", msg.getDestination());
+                    try {
+                        String paramStr = msg.getProperties().getString("JMS_Solace_HTTP_target_path_query_verbatim");
+                        System.out.println(paramStr);
+                        paramStr = paramStr.substring(paramStr.indexOf('?')+1);
+                        System.out.println(paramStr);
+                        Map<String, List<String>> params = splitQuery(paramStr);
+                        System.out.println(params.toString());
+
+                        double lat1 = Double.parseDouble(params.get("lat1").get(0));
+                        if (Math.abs(lat1) > 90) throw new NumberFormatException("lat1 "+lat1+" is out of range");
+                        double lat2 = Double.parseDouble(params.get("lat2").get(0));
+                        if (Math.abs(lat2) > 90) throw new NumberFormatException("lat2 "+lat2+" is out of range");
+                        double lon1 = Double.parseDouble(params.get("lon1").get(0));
+                        if (Math.abs(lon1) > 90) throw new NumberFormatException("lon1 "+lon1+" is out of range");
+                        double lon2 = Double.parseDouble(params.get("lon2").get(0));
+                        if (Math.abs(lon2) > 90) throw new NumberFormatException("lon2 "+lon2+" is out of range");
+                        Coordinate[] coords = {
+                            new Coordinate(lon1,lat1),
+                            new Coordinate(lon2,lat1),
+                            new Coordinate(lon2,lat2),
+                            new Coordinate(lon1,lat2),
+                            new Coordinate(lon1,lat1),
+                        };
+                        Geometry rect = new GeometryFactory().createPolygon(coords);
+                        Geo2dSearchResult result = search.splitToRatio(Collections.singletonList(rect), 0.75, 500);
+                        
+
+
+                        TextMessage replyMsg = JCSMPFactory.onlyInstance().createMessage(TextMessage.class);  // reply with a Text
+                        // the following has been fixed in SolOS 9.8
+                        // if (msg.getApplicationMessageId() != null) {
+                        //     replyMsg.setApplicationMessageId(msg.getApplicationMessageId());  // populate for traceability
+                        // }
+                        final String text = "Hello! Here is a response to your message on topic '" + msg.getDestination() + "'.";
+                        replyMsg.setText(String.format("subs: %s%nboundary: %s%n",result.getSubs().get(0).toString(),result.getUnion().get(0).toString()));
                         // only allowed to publish messages from API-owned (callback) thread when JCSMPProperties.MESSAGE_CALLBACK_ON_REACTOR == false
                         producer.sendReply(msg, replyMsg);  // convenience method: copies in reply-to, correlationId, etc.
                     } catch (NumberFormatException | NullPointerException e) {
@@ -201,7 +262,7 @@ public class SubsReplier {
             }
         });
 
-        search = Geo2dSearch.buildDecimalGeo2dSearch(3,10,9);
+        search = Geo2dSearch.buildDecimalGeo2dSearch(5,9,8);
 
 
         // topic to listen to incoming (messaging) requests, using a special wildcard borrowed from MQTT:
@@ -209,6 +270,7 @@ public class SubsReplier {
         // will match "solace/samples/direct/request" as well as "solace/samples/direct/request/anything/else"
         session.addSubscription(JCSMPFactory.onlyInstance().createTopic("geo/subs/circle*"));
         session.addSubscription(JCSMPFactory.onlyInstance().createTopic("GET/geo/subs/circle*"));
+        session.addSubscription(JCSMPFactory.onlyInstance().createTopic("GET/geo/subs/rect*"));
         // for use with HTTP MicroGateway feature, will respond to REST GET request on same URI
         // try doing: curl -u default:default http://localhost:9000/solace/samples/direct/request/hello
         // session.addSubscription(JCSMPFactory.onlyInstance().createTopic("GET/" + TOPIC_PREFIX + "/direct/request/\u0003"));

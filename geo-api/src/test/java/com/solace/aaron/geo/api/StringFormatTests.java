@@ -61,7 +61,7 @@ public class StringFormatTests {
     public void latLonTest() {
         double lat = -12.345678;  // range -90..90
         double lon = 123.456789;  // range -180..180  or  0..360
-        assertEquals(String.format("%09.5f",lat),"-12.34568");
-        assertEquals(String.format("%010.5f",lon),"0123.45679");
+        assertEquals("-12.34568",String.format("%09.5f",lat));
+        assertEquals("0123.45679",String.format("%010.5f",lon));
     }
 }

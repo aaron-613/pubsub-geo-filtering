@@ -30,19 +30,8 @@ import com.solace.aaron.geo.api.Geo2dSearch;
 import com.solace.aaron.geo.api.Geo2dSearchResult;
 import com.solace.aaron.geo.api.Geo2dSearchResult.IncrementalSearchResult;
 
-public class JsonTests {
+public class SearchTest {
 
-    private static class DoubleReverseComparator implements Comparator<Double> {
-
-        @Override
-        public int compare(Double d1, Double d2) {
-//            return d1 < d2 ? 1 : d1 > d2 ? -1 : 0;
-            return d1 > d2 ? 1 : d1 < d2 ? -1 : 0;
-        }
-    }
-    
-    
-    
     
     public static void main(String... args) throws InterruptedException, ParseException, FileNotFoundException, IOException {
 
@@ -130,10 +119,10 @@ public class JsonTests {
         System.out.printf("%n%n");
         Geo2dSearch search;
 //        search = new Geo2dSearch(4,7,12,-180,11,-90);
-//        search = new Geo2dSearch(4,4,6,0,6,0);
+        search = new Geo2dSearch(4,4,6,0,6,0);
 //        search = new Geo2dSearch(5,7,11,-180,10,-90);
 //        search = new Geo2dSearch(10,5,9,-180,8,-90);
-        search = new Geo2dSearch(10,5,9,0,8,0);
+//        search = new Geo2dSearch(10,5,9,0,8,0);
 //        search = Geo2dSearch.buildDecimalGeo2dSearch(2, 5, 4);
         // search = new Geo2dSearch(2,13,22,-180,21,-90);
 //        search = new Geo2dSearch(16,4,7,-180,6,-90);

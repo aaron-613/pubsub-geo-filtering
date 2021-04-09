@@ -25,6 +25,9 @@ public class Geo2dSearch {
     
     private static final Logger logger = LogManager.getLogger(Geo2dSearch.class);
 
+
+
+    //public static Geo2dSearch buildGeo2dSearch
     
     /**
      * 
@@ -49,6 +52,13 @@ public class Geo2dSearch {
         logger.info("Initialized {} with Bounds {}",this.getClass().getSimpleName(),getBounds());
     }
 
+    /**
+     * Helper static method that returns a newly created Search object.
+     * @param scale 
+     * @param xWidth
+     * @param yWidth
+     * @return
+     */
     public static Geo2dSearch buildDecimalGeo2dSearch(int scale, int xWidth, int yWidth) {
         return new Geo2dSearch(scale, xWidth, yWidth);
     }

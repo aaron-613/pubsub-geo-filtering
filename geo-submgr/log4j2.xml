@@ -9,7 +9,10 @@
     <Logger name="com.solace.aaron" level="debug" additivity="false">
       <AppenderRef ref="Console"/>
     </Logger>
-    <Root level="info">
+    <Logger name="com.solacesystems.jcsmp" level="debug" additivity="false">
+      <AppenderRef ref="Console"/>
+    </Logger>
+    <Root level="debug">
       <AppenderRef ref="Console"/>
     </Root>
   </Loggers>

@@ -33,7 +33,7 @@ class Geo2dSearchEngine {
     private static final double CUT_OFF_COVERAGE_RATIO = 0.9995;  // no point in splitting if above this. don't use 1.0 in case of float round error
 
     private static final Logger logger = LogManager.getLogger(Geo2dSearchEngine.class);
-    private static final GeometryFactory GEOMETRY_FACTORY = new GeometryFactory();
+    static final GeometryFactory GEOMETRY_FACTORY = new GeometryFactory();
 
     private final RadixGridRatioComparator SORT_COMPARATOR = new RadixGridRatioComparator();
     
@@ -105,7 +105,7 @@ class Geo2dSearchEngine {
 //        curAreas2 = startNode.getActualAreaRecursive(DepthOfCalc.ACTUAL);
         overAreas = startNode.getOverCoverageAreas(Depth.SINGLE);
         underAreas = startNode.getUnderCoverageAreas(Depth.SINGLE);
-        calculateRatios(ignoreTargetSet);
+        calculateRatios(Collections.emptySet());
     }
     
     /** 
@@ -653,92 +653,98 @@ class Geo2dSearchEngine {
 
         
         private void buildChildren() {
-            if (xRange.getWidth() == search.getXMaxWidth() && yRange.getWidth() == search.getYMaxWidth()) {  // can't split any further
-                return;  // don't go down further after however many decimal places of accuracy!
-            }
-            // so both ranges can't be maxed out... is it either though?
-            if (xRange.getWidth() == search.getXMaxWidth()) {
-                stripeDirection = StripeDirection.HORIZONTAL;
-            } else if (yRange.getWidth() == search.getYMaxWidth()) {
-                stripeDirection = StripeDirection.VERTICAL;
-            }
-            
-            // temp objects... used to potentially split both horizontally and vertically and see how it goes
-            List<RadixGrid> vertKids = new ArrayList<>(search.getRadix());
-            double vertCoverageSum = 0;
-            int vertFullCoverageKidCount = 0;
-            Set<Integer> vertIndexes = new HashSet<>();
-            List<RadixGrid> horizKids = new ArrayList<>(search.getRadix());
-            double horizCoverageSum = 0;
-            int horizFullCoverageKidCount = 0;
-            Set<Integer> horizIndexes = new HashSet<>();
-            if (stripeDirection != StripeDirection.HORIZONTAL) {  // so, either TBD (usual) or vertical
-                List<Range> subRanges;
-                if (xRange.getWidth() == 0) {  // if first char, can also include "-" sign
-                    subRanges = xRange.buildInitialChildren();
-                } else {
-                    subRanges = xRange.buildChildren();
+            try {
+                if (xRange.getWidth() == search.getXMaxWidth() && yRange.getWidth() == search.getYMaxWidth()) {  // can't split any further
+                    return;  // don't go down further after however many decimal places of accuracy!
                 }
-                for (Range child : subRanges) {
-                    RadixGrid kid = new RadixGrid(this,child,yRange);
-                    if (kid.intersects()) {
-                        vertKids.add(kid);
-                        if (kid.staticCoverageRatio >= CUT_OFF_COVERAGE_RATIO && kid.sortedTargets.size() == 1) {
-                            vertFullCoverageKidCount++;
-                        }
-                        vertIndexes.add(kid.getBiggestIntersectedTarget());
-                        vertCoverageSum += kid.staticCoverageRatio;
+                // so both ranges can't be maxed out... is it either though?
+                if (xRange.getWidth() == search.getXMaxWidth()) {
+                    stripeDirection = StripeDirection.HORIZONTAL;
+                } else if (yRange.getWidth() == search.getYMaxWidth()) {
+                    stripeDirection = StripeDirection.VERTICAL;
+                }
+                
+                // temp objects... used to potentially split both horizontally and vertically and see how it goes
+                List<RadixGrid> vertKids = new ArrayList<>(search.getRadix());
+                double vertCoverageSum = 0;
+                int vertFullCoverageKidCount = 0;
+                Set<Integer> vertIndexes = new HashSet<>();
+                List<RadixGrid> horizKids = new ArrayList<>(search.getRadix());
+                double horizCoverageSum = 0;
+                int horizFullCoverageKidCount = 0;
+                Set<Integer> horizIndexes = new HashSet<>();
+                if (stripeDirection != StripeDirection.HORIZONTAL) {  // so, either TBD (usual) or vertical
+                    List<Range> subRanges;
+                    if (xRange.getWidth() == 0) {  // if first char, can also include "-" sign
+                        subRanges = xRange.buildInitialChildren();
+                    } else {
+                        subRanges = xRange.buildChildren();
                     }
-                }
-            }
-            if (stripeDirection != StripeDirection.VERTICAL) {  // either TBD or horizontal
-                List<Range> subRanges;
-                if (yRange.getWidth() == 0) {  // if first char, can also include "-" sign
-                    subRanges = yRange.buildInitialChildren();
-                } else {
-                    subRanges = yRange.buildChildren();
-                }
-                for (Range child : subRanges) {
-                    RadixGrid kid = new RadixGrid(this,xRange,child);
-                    if (kid.intersects()) {
-                        horizKids.add(kid);
-                        if (kid.staticCoverageRatio >= CUT_OFF_COVERAGE_RATIO && kid.sortedTargets.size() == 1) {
-                            horizFullCoverageKidCount++;
-                        }
-                        horizIndexes.add(kid.getBiggestIntersectedTarget());
-                        horizCoverageSum += kid.staticCoverageRatio;
-                    }
-                }
-            }
-            // now... which way do we split??
-            if (stripeDirection == StripeDirection.TBD) {  // haven't decided yet...
-                assert vertKids.size() > 0;  // there has to be at least one intersection
-                assert horizKids.size() > 0;
-                if (RadixUtils.lookupInverseFactors(search.getRadix(),Math.abs(getXFactor()-getYFactor())) >= 0.02) {  // NEW i.e. not too skinny
-                    if (vertKids.size() == horizKids.size()) {  // dang, same number of kids
-                        if (vertFullCoverageKidCount == horizFullCoverageKidCount) {  // double dang, same number of full rows/cols
-//                        if (RadixUtils.lookupInverseFactors(engine.getRadix(),Math.abs(xFactor-yFactor)) >= 0.1) {  // NEW i.e. not too skinny
-                            if (Math.abs(horizCoverageSum - vertCoverageSum) < 1E-6) {  // rounding error, do we get better coverage one way?
-                                if (vertIndexes.size() == horizIndexes.size()) {  // is one direction have a better split between multiple targets?
-                                    stripeDirection = whichWayToSplit();
-                                } else {
-                                    stripeDirection = vertIndexes.size() > horizIndexes.size() ? StripeDirection.HORIZONTAL : StripeDirection.VERTICAL;
-                                }
-                            } else {
-                                stripeDirection = horizCoverageSum > vertCoverageSum ? StripeDirection.HORIZONTAL : StripeDirection.VERTICAL;
+                    for (Range child : subRanges) {
+                        RadixGrid kid = new RadixGrid(this,child,yRange);
+                        if (kid.intersects()) {
+                            vertKids.add(kid);
+                            if (kid.staticCoverageRatio >= CUT_OFF_COVERAGE_RATIO && kid.sortedTargets.size() == 1) {
+                                vertFullCoverageKidCount++;
                             }
-                        } else {  // who has more full coverage rows?
-                            stripeDirection = vertFullCoverageKidCount > horizFullCoverageKidCount ? StripeDirection.VERTICAL : StripeDirection.HORIZONTAL;
+                            vertIndexes.add(kid.getBiggestIntersectedTarget());
+                            vertCoverageSum += kid.staticCoverageRatio;
                         }
-                    } else {  // pick whichever way has less kids
-                        stripeDirection = vertKids.size() < horizKids.size() ? StripeDirection.VERTICAL : StripeDirection.HORIZONTAL;
                     }
-                } else {
-                    stripeDirection = getXFactor() > getYFactor() ? StripeDirection.HORIZONTAL : StripeDirection.VERTICAL;
                 }
+                if (stripeDirection != StripeDirection.VERTICAL) {  // either TBD or horizontal
+                    List<Range> subRanges;
+                    if (yRange.getWidth() == 0) {  // if first char, can also include "-" sign
+                        subRanges = yRange.buildInitialChildren();
+                    } else {
+                        subRanges = yRange.buildChildren();
+                    }
+                    for (Range child : subRanges) {
+                        RadixGrid kid = new RadixGrid(this,xRange,child);
+                        if (kid.intersects()) {
+                            horizKids.add(kid);
+                            if (kid.staticCoverageRatio >= CUT_OFF_COVERAGE_RATIO && kid.sortedTargets.size() == 1) {
+                                horizFullCoverageKidCount++;
+                            }
+                            horizIndexes.add(kid.getBiggestIntersectedTarget());
+                            horizCoverageSum += kid.staticCoverageRatio;
+                        }
+                    }
+                }
+                // now... which way do we split??
+                if (stripeDirection == StripeDirection.TBD) {  // haven't decided yet...
+                    assert vertKids.size() > 0;  // there has to be at least one intersection
+                    assert horizKids.size() > 0;
+                    if (RadixUtils.lookupInverseFactors(search.getRadix(),Math.abs(getXFactor()-getYFactor())) >= 0.02) {  // NEW i.e. not too skinny
+                        if (vertKids.size() == horizKids.size()) {  // dang, same number of kids
+                            if (vertFullCoverageKidCount == horizFullCoverageKidCount) {  // double dang, same number of full rows/cols
+    //                        if (RadixUtils.lookupInverseFactors(engine.getRadix(),Math.abs(xFactor-yFactor)) >= 0.1) {  // NEW i.e. not too skinny
+                                if (Math.abs(horizCoverageSum - vertCoverageSum) < 1E-6) {  // rounding error, do we get better coverage one way?
+                                    if (vertIndexes.size() == horizIndexes.size()) {  // is one direction have a better split between multiple targets?
+                                        stripeDirection = whichWayToSplit();
+                                    } else {
+                                        stripeDirection = vertIndexes.size() > horizIndexes.size() ? StripeDirection.HORIZONTAL : StripeDirection.VERTICAL;
+                                    }
+                                } else {
+                                    stripeDirection = horizCoverageSum > vertCoverageSum ? StripeDirection.HORIZONTAL : StripeDirection.VERTICAL;
+                                }
+                            } else {  // who has more full coverage rows?
+                                stripeDirection = vertFullCoverageKidCount > horizFullCoverageKidCount ? StripeDirection.VERTICAL : StripeDirection.HORIZONTAL;
+                            }
+                        } else {  // pick whichever way has less kids
+                            stripeDirection = vertKids.size() < horizKids.size() ? StripeDirection.VERTICAL : StripeDirection.HORIZONTAL;
+                        }
+                    } else {
+                        stripeDirection = getXFactor() > getYFactor() ? StripeDirection.HORIZONTAL : StripeDirection.VERTICAL;
+                    }
+                }
+                // now that we've decided...
+                children = stripeDirection == StripeDirection.VERTICAL ? vertKids : horizKids;
+            } catch (NullPointerException | IllegalArgumentException e) {  // something definitely went wrong!
+                System.err.println("SOMETHIGN WENT WRONG IN buildChildren: "+e.toString());
+                System.err.println(this);
+                throw e;
             }
-            // now that we've decided...
-            children = stripeDirection == StripeDirection.VERTICAL ? vertKids : horizKids;
         }
         
 

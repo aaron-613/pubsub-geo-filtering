@@ -171,9 +171,9 @@ public final class GeoStringFormatter {
         this.offsetMultiplier = -offset * Math.pow(radix,scale);
         assert width > 0 : "width must be > 0, but width=="+width;
         assert radix >= 2 && radix <= 36 : "radix must be in [2,36], but radix=="+radix;
-        this.includeDecimal = true;//includeDecimal;
+        this.includeDecimal = includeDecimal;
         if (this.includeDecimal) {
-            //assert radix == 10;
+            assert radix == 10;
         }
         digitsLeftOfDecimal = width-scale;
         this.minValue = getInner("");
@@ -187,7 +187,7 @@ public final class GeoStringFormatter {
      * @return
      */
     public static GeoStringFormatter buildRegularDecimalFormatter(int width, int scale) {
-        return new GeoStringFormatter(10, width-1, scale, 0, true);
+        return new GeoStringFormatter(10, width, scale, 0, true);
     }
     
     public int getRadix() {
