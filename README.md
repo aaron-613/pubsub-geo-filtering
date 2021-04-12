@@ -25,8 +25,7 @@ This includes an array of subscriptions (in `lat/lon` format), and also a WKT st
 
 
 
-#
-Using the geo-api
+# Using the geo-api
 
 ![Circular search area](https://github.com/aaron-613/pubsub-geo-filtering/blob/master/stuff/circle.png "Circular search area")
 
