@@ -145,10 +145,15 @@ public class SubsReplier {
             @Override
             public void onReceive(BytesXMLMessage msg) {
                 System.out.println(msg.dump());
-                if (msg.getDestination().getName().contains("circle") && msg.getReplyTo() != null) {
+                if (msg.getDestination().getName().startsWith("GET") && msg.getDestination().getName().contains("circle") && msg.getReplyTo() != null) {
                     System.out.printf("Received request on '%s', generating response.%n", msg.getDestination());
                     try {
-                        String paramStr = msg.getProperties().getString("JMS_Solace_HTTP_target_path_query_verbatim");
+                        String paramStr;
+                        if (msg.getDestination().getName().startsWith("GET")) {
+                            paramStr = msg.getProperties().getString("JMS_Solace_HTTP_target_path_query_verbatim");
+                        } else {
+                            paramStr = msg.getDestination().getName();
+                        }
                         System.out.println(paramStr);
                         paramStr = paramStr.substring(paramStr.indexOf('?')+1);
                         System.out.println(paramStr);
@@ -166,9 +171,8 @@ public class SubsReplier {
                         try {
                             accuracy = Integer.parseInt(params.get("accuracy").get(0));
                         } catch (RuntimeException e) { }
-                        if (accuracy < 30) throw new NumberFormatException("accuracy "+accuracy+" must be greater than 30");
-                        if (accuracy > 99) throw new NumberFormatException("accuracy "+accuracy+" must be less than or equal to 99");
-                        int maxSubs = 500;
+                        if (accuracy < 30 || accuracy > 99) throw new NumberFormatException("accuracy "+accuracy+" must be in [30,99]");
+                        int maxSubs = 1000;
                         try {
                             maxSubs = Integer.parseInt(params.get("maxSubs").get(0));
                         } catch (RuntimeException e) { }

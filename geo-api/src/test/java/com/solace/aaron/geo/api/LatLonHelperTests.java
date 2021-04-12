@@ -25,10 +25,10 @@ public class LatLonHelperTests {
     public void someTests() {
         logger.info("Some Tests");
         
-        logger.info(LatLonHelper.convertDecimalDegreeToMetres(1.123));
-        logger.info(LatLonHelper.convertDecimalDegreeToMetres(0.123));
-        logger.info(LatLonHelper.convertDecimalDegreeToMetres(0.0123));
-        logger.info(LatLonHelper.convertDecimalDegreeToMetres(0.00123));
+        // logger.info(LatLonHelper.convertDecimalDegreeToMetres(1.123));
+        // logger.info(LatLonHelper.convertDecimalDegreeToMetres(0.123));
+        // logger.info(LatLonHelper.convertDecimalDegreeToMetres(0.0123));
+        // logger.info(LatLonHelper.convertDecimalDegreeToMetres(0.00123));
         
         logger.info(Arrays.toString(LatLonHelper.getLatLonCircleDimensions2(51, 100)));
         logger.info(Arrays.toString(LatLonHelper.getLatLonCircleDimensions2(51, 1000)));

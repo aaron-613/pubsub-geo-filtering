@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.operation.union.UnaryUnionOp;
+import org.locationtech.jts.simplify.VWSimplifier;
 
 import com.solace.aaron.geo.api.Geo2dSearchEngine.RadixGrid;
 
