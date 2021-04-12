@@ -48,6 +48,11 @@ dependencies {
   //jaxDoclet "some.interesting:Dependency:1.0"
 }
 
+tasks.withType(JavaCompile).all {
+    options.compilerArgs.add("-Xlint:all")
+}
+
+
 task generateRestApiDocs(type: Javadoc) {
   source = sourceSets.main.allJava
   destinationDir = reporting.file("rest-api-docs")
