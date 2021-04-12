@@ -12,7 +12,7 @@ import org.locationtech.jts.util.GeometricShapeFactory;
 public class LatLonHelper {
 
     
-    public static final double METRES_PER_DEGREE = 111319.9;
+    //public static final double METRES_PER_DEGREE = 111319.9;
     
     /*
      * used for circle calculations -- figures out how high and wide in lat/lon this circle is
@@ -43,30 +43,47 @@ public class LatLonHelper {
      * https://en.wikipedia.org/wiki/Longitude#Length_of_a_degree_of_longitude
      */
     public static double[] getLatLonCircleDimensions2(double centerLat, double radiusMetres) {
-        double latRadians = centerLat * Math.PI / 180;
+        if (Math.abs(centerLat) > 90) throw new IllegalArgumentException("Value of latitude "+centerLat+" must be in [-90,90]");
 
-        double metersPerDegreeLon = (111_412.84 * Math.cos(latRadians)) - (93.5 * Math.cos(3 * latRadians))+ (0.118 * Math.cos(5 * latRadians));
+        double metersPerDegreeLon = getMetresPerDegreeLon(centerLat);
         double lonOffset = radiusMetres / metersPerDegreeLon;
 
-        double metersPerDegreeLat = 111_132.954 - (559.822 * Math.cos(2 * latRadians)) + (1.175 * Math.cos(4 * latRadians)) - (0.0023 * Math.cos(6 * latRadians));
+        double metersPerDegreeLat = getMetresPerDegreeLat(centerLat);
         double latOffset = radiusMetres / metersPerDegreeLat;
 
         return new double[] {2*latOffset,2*lonOffset};
     }
 
-    public static double convertMetresToDecimalDegree(double metres) {
-        return metres / METRES_PER_DEGREE;
+    public static double getMetresPerDegreeLon(double latDegrees) {
+        if (Math.abs(latDegrees) > 90) throw new IllegalArgumentException("Value of latitude "+latDegrees+" must be in [-90,90]");
+        double latRadians = latDegrees * Math.PI / 180;
+        // https://en.wikipedia.org/wiki/Geographic_coordinate_system
+        return (111_412.84 * Math.cos(latRadians)) - (93.5 * Math.cos(3 * latRadians)) + (0.118 * Math.cos(5 * latRadians));
     }
 
-    public static double convertDecimalDegreeToMetres(double degrees) {
-        return degrees * METRES_PER_DEGREE;
+    public static double getMetresPerDegreeLat(double latDegrees) {
+        if (Math.abs(latDegrees) > 90) throw new IllegalArgumentException("Value of latitude "+latDegrees+" must be in [-90,90]");
+        double latRadians = latDegrees * Math.PI / 180;
+        // https://en.wikipedia.org/wiki/Geographic_coordinate_system
+        return 111_132.954 - (559.822 * Math.cos(2 * latRadians)) + (1.175 * Math.cos(4 * latRadians)) - (0.0023 * Math.cos(6 * latRadians));
     }
+
+    // public static double convertMetresToDecimalDegree(double metres) {
+    //     return metres / METRES_PER_DEGREE;
+    // }
+
+    // public static double convertDecimalDegreeToMetres(double degrees) {
+    //     return degrees * METRES_PER_DEGREE;
+    // }
 
     public static Geometry buildLatLonCircleGeometry(double lat, double lon, double radiusMetres) {
+        if (Math.abs(lat) > 90) throw new IllegalArgumentException("Latitude "+lat+" must be in [-90,90]");
+        if (Math.abs(lon) > 180) throw new IllegalArgumentException("Longitude "+lon+" must be in [-180,180]");
+        if (radiusMetres <= 0) throw new IllegalArgumentException("radiusMetres "+radiusMetres+" must be > 0");
         GeometricShapeFactory shapeFactory = new GeometricShapeFactory(Geo2dSearchEngine.GEOMETRY_FACTORY);
         shapeFactory.setCentre(new Coordinate(lon,lat));
-        shapeFactory.setWidth(getLatLonCircleDimensions2(lon,radiusMetres)[0]);  // lat offset, even though it is width, b/c order matters
-        shapeFactory.setHeight(getLatLonCircleDimensions2(lon,radiusMetres)[1]);
+        shapeFactory.setWidth(getLatLonCircleDimensions2(lat,radiusMetres)[1]);   // width = lon offset
+        shapeFactory.setHeight(getLatLonCircleDimensions2(lat,radiusMetres)[0]);  // height = lat offset
         shapeFactory.setNumPoints(72);
         return shapeFactory.createCircle();
     }

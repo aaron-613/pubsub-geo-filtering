@@ -35,4 +35,25 @@ public class LatLonHelperTests {
         logger.info(Arrays.toString(LatLonHelper.getLatLonCircleDimensions2(51, 10000)));
         
     }
+
+
+
+    @Test
+    public void degreeConvertTests() {
+        logger.info("degreeConvertTests");
+        
+        logger.info(LatLonHelper.getMetresPerDegreeLat(0));
+        logger.info(LatLonHelper.getMetresPerDegreeLat(30));
+        logger.info(LatLonHelper.getMetresPerDegreeLat(45));
+        logger.info(LatLonHelper.getMetresPerDegreeLat(60));
+        logger.info(LatLonHelper.getMetresPerDegreeLat(75));
+        
+        logger.info(LatLonHelper.getMetresPerDegreeLon(0));
+        logger.info(LatLonHelper.getMetresPerDegreeLon(30));
+        logger.info(LatLonHelper.getMetresPerDegreeLon(45));
+        logger.info(LatLonHelper.getMetresPerDegreeLon(60));
+        logger.info(LatLonHelper.getMetresPerDegreeLon(75));
+        
+    }
+
 }

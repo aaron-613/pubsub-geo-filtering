@@ -59,8 +59,8 @@ public class OldWayChooseCorrectRadixValues {
             int lWidth = (int)Math.ceil(Math.log10((max * Math.pow(radix,lScale))) / Math.log10(radix));
             double hResolution = 1.0/Math.pow(radix,hScale);
             double lResolution = 1.0/Math.pow(radix,lScale);
-            hResolution = LatLonHelper.convertDecimalDegreeToMetres(hResolution);
-            lResolution = LatLonHelper.convertDecimalDegreeToMetres(lResolution);
+            //hResolution = LatLonHelper.convertDecimalDegreeToMetres(hResolution);
+            //lResolution = LatLonHelper.convertDecimalDegreeToMetres(lResolution);
             double hLargest = (Math.pow(radix,hWidth)-0)/(Math.pow(radix,hScale))-1;
             double lLargest = (Math.pow(radix,lWidth)-0)/(Math.pow(radix,lScale))-1;
             
@@ -144,7 +144,7 @@ public class OldWayChooseCorrectRadixValues {
             if (width <= 0) continue;
             System.out.printf("With scale=%d, width=%d:%n",scale,width);
             System.out.printf(" * this will provide a maximum resolution of %.8f units (base 10)%n",reso);
-            System.out.printf("    * or ~%.1f metres if this is lat/lon decimal degreees%n",LatLonHelper.convertDecimalDegreeToMetres(reso));
+            //System.out.printf("    * or ~%.1f metres if this is lat/lon decimal degreees%n",LatLonHelper.convertDecimalDegreeToMetres(reso));
             System.out.printf(" * said another way, this will allow a maximum of %d 'slices' of the range%n",(int)Math.ceil(range/reso));
             double largest = (Math.pow(radix,width)-0)/(Math.pow(radix,scale))-1;
             System.out.printf(" * these values would allow a maximum representable value of 0..%f units%n",largest);

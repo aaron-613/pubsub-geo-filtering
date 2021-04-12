@@ -30,6 +30,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import javax.json.Json;
+import javax.json.JsonArrayBuilder;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
+import javax.json.JsonWriter;
+
 import com.solace.aaron.geo.api.Geo2dSearch;
 import com.solace.aaron.geo.api.Geo2dSearchResult;
 import com.solace.aaron.geo.api.LatLonHelper;
@@ -148,36 +154,63 @@ public class SubsReplier {
                         System.out.println(paramStr);
                         Map<String, List<String>> params = splitQuery(paramStr);
                         System.out.println(params.toString());
+                        // 
 
                         double lat = Double.parseDouble(params.get("lat").get(0));
                         if (Math.abs(lat) > 90) throw new NumberFormatException("lat "+lat+" is out of range");
                         double lon = Double.parseDouble(params.get("lon").get(0));
-                        if (Math.abs(lon) > 90) throw new NumberFormatException("lon "+lon+" is out of range");
+                        if (Math.abs(lon) > 180) throw new NumberFormatException("lon "+lon+" is out of range");
                         double radiusMetres = Double.parseDouble(params.get("radiusMetres").get(0));
                         if (radiusMetres <= 0) throw new NumberFormatException("radiusMetres "+radiusMetres+" must be greater than 0");
+                        int accuracy = 90;
+                        try {
+                            accuracy = Integer.parseInt(params.get("accuracy").get(0));
+                        } catch (RuntimeException e) { }
+                        if (accuracy < 30) throw new NumberFormatException("accuracy "+accuracy+" must be greater than 30");
+                        if (accuracy > 99) throw new NumberFormatException("accuracy "+accuracy+" must be less than or equal to 99");
+                        int maxSubs = 500;
+                        try {
+                            maxSubs = Integer.parseInt(params.get("maxSubs").get(0));
+                        } catch (RuntimeException e) { }
+                        if (maxSubs < 10) throw new NumberFormatException("maxSubs "+maxSubs+" must be greater than 10");
+                        if (maxSubs > 2000) throw new NumberFormatException("maxSubs "+maxSubs+" must be less than 2000");
+
                         // all checks pass
-                        Geometry circle = LatLonHelper.buildLatLonCircleGeometry(lon, lat, radiusMetres);
-                        Geo2dSearchResult result = search.splitToRatio(Collections.singletonList(circle), 0.75, 500);
+                        Geometry circle = LatLonHelper.buildLatLonCircleGeometry(lat, lon, radiusMetres);
+                        Geo2dSearchResult result = search.splitToRatio(Collections.singletonList(circle), accuracy / 100.0, maxSubs);
                         
 
 
                         TextMessage replyMsg = JCSMPFactory.onlyInstance().createMessage(TextMessage.class);  // reply with a Text
                         // the following has been fixed in SolOS 9.8
-                        // if (msg.getApplicationMessageId() != null) {
-                        //     replyMsg.setApplicationMessageId(msg.getApplicationMessageId());  // populate for traceability
-                        // }
-                        final String text = "Hello! Here is a response to your message on topic '" + msg.getDestination() + "'.";
-                        replyMsg.setText(result.getSubs().get(0).toString());
-                        // only allowed to publish messages from API-owned (callback) thread when JCSMPProperties.MESSAGE_CALLBACK_ON_REACTOR == false
+                        if (msg.getApplicationMessageId() != null) {
+                            replyMsg.setApplicationMessageId(msg.getApplicationMessageId());  // populate for traceability
+                        }
+
+
+                        //JsonWriter writer = Json.createWriter(System.out);
+                        JsonArrayBuilder jab = Json.createArrayBuilder(result.getSubs().get(0));
+                        JsonObjectBuilder job = Json.createObjectBuilder();
+                        job.add("subs",jab);
+                        //jab = Json.createArrayBuilder(result.getSquares().get(0));
+                        //job.add("squares",jab);
+                        job.add("perimiter",result.getUnion().get(0).toString());
+                        //System.out.println(jo.toString().length());
+                
+
+                        replyMsg.setText(job.build().toString());
                         producer.sendReply(msg, replyMsg);  // convenience method: copies in reply-to, correlationId, etc.
-                    } catch (NumberFormatException | NullPointerException e) {
+                    // } catch (NumberFormatException | NullPointerException e) {
+                    } catch (RuntimeException e) {
+                        e.printStackTrace();
                         if (msg.getDestination().getName().startsWith("GET")) {  // need to send an error response
                             try {
                                 BytesMessage replyMsg = JCSMPFactory.onlyInstance().createMessage(BytesMessage.class);  // reply with a Text
                                 SDTMap userProps = JCSMPFactory.onlyInstance().createMap();
-                                userProps.putInteger("JMS_Solace_HTTP_status_code",400);
+                                userProps.putInteger("JMS_Solace_HTTP_status_code",200);
                                 userProps.putString("JMS_Solace_HTTP_reason_phrase","Missing/invalid arguments: lat [-90,90], lon [-180,180], radiusMetres > 0; "+e.toString());
                                 replyMsg.setProperties(userProps);
+                                replyMsg.setData(e.toString().getBytes());
                                 producer.sendReply(msg, replyMsg);  // convenience method: copies in reply-to, correlationId, etc.
                             } catch (JCSMPException e1) {
                                 // TODO Auto-generated catch block

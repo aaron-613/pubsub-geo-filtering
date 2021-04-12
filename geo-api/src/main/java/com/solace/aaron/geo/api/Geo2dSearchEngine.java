@@ -265,7 +265,7 @@ class Geo2dSearchEngine {
         // ALL DONE!
         logger.info("LOOPS through iterator: {}",loopsThroughIterator);
         logger.info("LOOPS ignoring parents: {}",loopsWhileIgnoringUnsplitParents);
-        logger.info("LOOPS for each LOOP: {}",Arrays.toString(iteratorLoops));
+        // logger.info("LOOPS for each LOOP: {}",Arrays.toString(iteratorLoops));
         logger.info("$$$$ TOTAL TIME: {}ms, LOOPS: {}",(System.nanoTime()-totalTime)/1000000,loop);
         int tot = 0;
         for (int i=0;i<targets.length;i++) {
@@ -297,7 +297,7 @@ class Geo2dSearchEngine {
         logger.info("Average Combined: "+(Math.floor((1-avg)*10000)/100)+"%");
 //        logger.info("CurArea deltas: "+Arrays.toString(ArrayMath.subtract(curAreas2,curAreas)));
 //        logger.info("For target #4: {}",(rootNode.getUnion().get(3).getArea() - targetAreas[3]) / targetAreas[3]);
-        logger.info(rootNode.getSubs(false));
+        // logger.info(rootNode.getSubs(false));
         
         return new Geo2dSearchResult(targets,rootNode,new ArrayList<RadixGrid>(orderedSplitGrids));
     }

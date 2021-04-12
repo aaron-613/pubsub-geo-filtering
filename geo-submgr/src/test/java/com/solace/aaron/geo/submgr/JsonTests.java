@@ -28,7 +28,7 @@ import org.locationtech.jts.io.ParseException;
 
 public class JsonTests {
 
-    private static class DoubleReverseComparator implements Comparator<Double> {
+    static class DoubleReverseComparator implements Comparator<Double> {
 
         @Override
         public int compare(Double d1, Double d2) {

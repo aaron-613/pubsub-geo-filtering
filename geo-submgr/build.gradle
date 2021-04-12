@@ -40,8 +40,8 @@ dependencies {
 
 
 def scripts = [
-    'SubsReplier':'com.solace.aaron.geo.submgr.SubsReplier',
-    'GeoSubMgr':'com.solace.aaron.geo.submgr.GeoSubMgr'
+    'SubsReplier':'com.solace.aaron.geo.submgr.SubsReplier'
+//    'GeoSubMgr':'com.solace.aaron.geo.submgr.GeoSubMgr'
 ]
 scripts.each() { scriptName, className ->
     def t = tasks.create(name: scriptName+'StartScript', type: CreateStartScripts) {
