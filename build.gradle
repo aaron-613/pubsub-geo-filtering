@@ -67,7 +67,6 @@ task generateRestApiDocs(type: Javadoc) {
 allprojects {
 
   repositories {
-    jcenter()
     mavenCentral()
   }
 

@@ -45,7 +45,7 @@ def scripts = [
 ]
 scripts.each() { scriptName, className ->
     def t = tasks.create(name: scriptName+'StartScript', type: CreateStartScripts) {
-        mainClassName = className
+        mainClass = className
         applicationName = scriptName
         outputDir = new File(project.buildDir, 'scripts')
         classpath = jar.outputs.files + project.configurations.runtimeClasspath
