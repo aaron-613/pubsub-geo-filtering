@@ -21,13 +21,13 @@ curl "http://192.168.42.35:9000/geo/subs/circle?lat=33.749&lon=-84.388&radiusMet
 }
 ```
 This includes an array of subscriptions (in `lat/lon` format), and also a WKT string defining the perimeter of the shape, useful for visualization. E.g. https://arthur-e.github.io/Wicket/sandbox-gmaps3.html
-![Atlanta](https://github.com/aaron-613/pubsub-geo-filtering/blob/master/stuff/atlanta.png "Atlanta")
+![Atlanta](https://github.com/aaron-613/pubsub-geo-filtering/blob/main/stuff/atlanta.png "Atlanta")
 
 
 
 # Using the geo-api
 
-![Circular search area](https://github.com/aaron-613/pubsub-geo-filtering/blob/master/stuff/circle.png "Circular search area")
+![Circular search area](https://github.com/aaron-613/pubsub-geo-filtering/blob/main/stuff/circle.png "Circular search area")
 
 # Basics
 
@@ -48,7 +48,7 @@ https://worldcomp-proceedings.com/proc/p2016/ICM3967.pdf
 
 # The Algorithm
 
-![blah](https://github.com/aaron-613/pubsub-geo-filtering/blob/master/stuff/base4animation22.gif "Base 4 search construction")
+![blah](https://github.com/aaron-613/pubsub-geo-filtering/blob/main/stuff/base4animation22.gif "Base 4 search construction")
 
 Significant changes to the algorithm have been made to greatly simplify it and improve its usability.
 
